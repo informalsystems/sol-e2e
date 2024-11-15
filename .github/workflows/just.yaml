@@ -21,4 +21,25 @@ jobs:
         with:
           name: ethereum-nix
           extraPullNames: nix-community
+      - name: Cache Nix Store
+        uses: actions/cache@v4
+        with:
+          path: /nix/store
+          key: ${{ runner.os }}-nix-${{ hashFiles('**/*.nix') }}
+          restore-keys: |
+            ${{ runner.os }}-nix-
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+      - name: Cache Cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-build-
       - run: nix shell .#just .#cargo-nextest .#reth .#foundry-bin -c just
