@@ -2,6 +2,13 @@
 
 E2E Testing of Solidity Contracts
 
+## Nix
+
+```bash
+$ nix develop
+(nix-shell-env) $ just
+```
+
 ## Requirements
 
 - [`rust`](https://rustup.rs)
