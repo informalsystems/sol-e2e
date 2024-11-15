@@ -1,0 +1,17 @@
+[package]
+name = "sol-e2e"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+alloy = { version = "0.6.4", features = [
+    "network",
+    "node-bindings",
+    "providers",
+] }
+alloy-contract = "0.6.4"
+alloy-signer-local = { version = "0.6.4", features = ["mnemonic"] }
+alloy-sol-types = { version = "0.8.12", features = ["json"] }
+anyhow = "1.0.93"
+testresult = "0.4.1"
+tokio = { version = "1.41.1", features = ["rt-multi-thread", "macros"] }
