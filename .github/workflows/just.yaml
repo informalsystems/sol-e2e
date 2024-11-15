@@ -1,0 +1,18 @@
+name: Run Justfile
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  justfile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: foundry-rs/foundry-toolchain@v1
+      - uses: taiki-e/install-action@just
+      - uses: taiki-e/install-action@nextest
+      - run: just
