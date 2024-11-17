@@ -16,22 +16,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup Nix
-        uses: cachix/install-nix-action@v30
+        uses: nixbuild/nix-quick-install-action@v29
+      - name: Cache Nix store
+        uses: nix-community/cache-nix-action@v5
         with:
-          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          primary-key: ${{ runner.os }}-nix-${{ hashFiles('**/*.nix') }}
+          restore-prefixes-first-match: ${{ runner.os }}-nix-
       - name: Use Cachix for Ethereum Nix
         uses: cachix/cachix-action@v15
         with:
           name: ethereum-nix
           extraPullNames: nix-community
-      # # Does not work with /nix/store, permission issues
-      # - name: Cache Nix Store
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: /nix/store
-      #     key: ${{ runner.os }}-nix-${{ hashFiles('**/*.nix') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-nix-
       - name: Cache Cargo registry
         uses: actions/cache@v4
         with:
