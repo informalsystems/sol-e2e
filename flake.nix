@@ -10,7 +10,7 @@
 
   outputs =
     inputs:
-    inputs.flake-utils.lib.eachDefaultSystem (
+    inputs.flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       system:
       let
         pkgs = import inputs.nixpkgs {
@@ -31,7 +31,7 @@
             ;
         };
 
-        devShell = pkgs.mkShell {
+        devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             just
             cargo-nextest
