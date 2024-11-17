@@ -46,7 +46,7 @@ jobs:
           key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-build-
+      - name: Build nix
+        run: nix build --quiet
       - name: Run Justfile
-        run: |
-          nix build --quiet .#just .#cargo-nextest .#reth .#foundry-bin
-          nix shell .#just .#cargo-nextest .#reth .#foundry-bin -c just
+        run: nix shell -c just
