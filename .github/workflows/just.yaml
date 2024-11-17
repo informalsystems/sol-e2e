@@ -25,13 +25,14 @@ jobs:
         with:
           name: ethereum-nix
           extraPullNames: nix-community
-      - name: Cache Nix Store
-        uses: actions/cache@v4
-        with:
-          path: /nix/store
-          key: ${{ runner.os }}-nix-${{ hashFiles('**/*.nix') }}
-          restore-keys: |
-            ${{ runner.os }}-nix-
+      # # Does not work with /nix/store, permission issues
+      # - name: Cache Nix Store
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: /nix/store
+      #     key: ${{ runner.os }}-nix-${{ hashFiles('**/*.nix') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-nix-
       - name: Cache Cargo registry
         uses: actions/cache@v4
         with:
