@@ -29,6 +29,15 @@
             reth
             foundry-bin
             ;
+          default = pkgs.symlinkJoin {
+            name = "combined-default";
+            paths = [
+              just
+              cargo-nextest
+              reth
+              foundry-bin
+            ];
+          };
         };
 
         devShells.default = pkgs.mkShell {
