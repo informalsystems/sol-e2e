@@ -4,9 +4,10 @@ E2E Testing of Solidity Contracts
 
 ## Nix
 
+Requires `nix-command` and `flakes` support.
+
 ```bash
-$ nix develop
-(nix-shell-env) $ just
+nix shell -c just
 ```
 
 ## Requirements
