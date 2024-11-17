@@ -15,24 +15,28 @@
       let
         pkgs = import inputs.nixpkgs {
           inherit system;
-          overlays = [ inputs.rust-overlay.overlays.default ];
+          overlays = [
+            inputs.rust-overlay.overlays.default
+            inputs.ethereumNix.overlays.default
+          ];
         };
-        ethPkgs = inputs.ethereumNix.packages.${system};
       in
       {
-        packages = {
-          just = pkgs.just;
-          cargo-nextest = pkgs.cargo-nextest;
-          reth = ethPkgs.reth;
-          foundry-bin = ethPkgs.foundry-bin;
+        packages = with pkgs; {
+          inherit
+            just
+            cargo-nextest
+            reth
+            foundry-bin
+            ;
         };
 
         devShell = pkgs.mkShell {
-          buildInputs = [
-            pkgs.just
-            pkgs.cargo-nextest
-            ethPkgs.reth
-            ethPkgs.foundry-bin
+          buildInputs = with pkgs; [
+            just
+            cargo-nextest
+            reth
+            foundry-bin
           ];
         };
 
