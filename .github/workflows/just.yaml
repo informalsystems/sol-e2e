@@ -37,7 +37,7 @@ jobs:
           restore-keys: ${{ runner.os }}-cargo-
       - name: Prepare nix
         run: |
+          nix build
           nix flake check --all-systems
-          nix build --quiet
       - name: Run Justfile
         run: nix shell -c just
