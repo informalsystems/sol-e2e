@@ -1,0 +1,14 @@
+{
+  "config": {
+    "chainId": 1337,
+    "terminalTotalDifficulty": 0,
+    "ethash": {},
+    "mergeNetsplitBlock": 0
+  },
+  "alloc": {},
+  "difficulty": "0x1",
+  "gasLimit": "0x1fffffffffffff",
+  "extraData": "",
+  "nonce": "0x0",
+  "timestamp": "0x0"
+}

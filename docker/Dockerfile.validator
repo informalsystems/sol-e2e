@@ -1,6 +1,6 @@
 FROM sigp/lighthouse:latest
-COPY testnet /config/testnet
-COPY jwt.hex /config/jwt.hex
+COPY data/testnet /config/testnet
+COPY data/jwt.hex /config/jwt.hex
 RUN mkdir /validator
 RUN echo -n "MySecurePassword" > /validator/password.txt
 RUN lighthouse account wallet create \
