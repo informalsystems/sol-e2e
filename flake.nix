@@ -33,6 +33,7 @@
               just
               cargo-nextest
               reth
+              lighthouse
               foundry-bin
             ];
           };
@@ -42,6 +43,7 @@
               just
               cargo-nextest
               reth
+              lighthouse
               foundry-bin
             ];
           };
