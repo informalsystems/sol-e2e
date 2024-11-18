@@ -1,0 +1,3 @@
+FROM ghcr.io/paradigmxyz/reth:latest
+COPY genesis.json /config/genesis.json
+COPY jwt.hex /config/jwt.hex

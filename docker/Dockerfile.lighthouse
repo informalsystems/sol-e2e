@@ -1,0 +1,3 @@
+FROM sigp/lighthouse:latest
+COPY testnet /config/testnet
+COPY jwt.hex /config/jwt.hex

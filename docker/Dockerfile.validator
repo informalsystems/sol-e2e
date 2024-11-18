@@ -1,0 +1,17 @@
+FROM sigp/lighthouse:latest
+COPY testnet /config/testnet
+COPY jwt.hex /config/jwt.hex
+RUN mkdir /validator
+RUN echo -n "MySecurePassword" > /validator/password.txt
+RUN lighthouse account wallet create \
+    --datadir /validator \
+    --testnet-dir /config/testnet \
+    --name "validator" \
+    --password-file /validator/password.txt
+
+RUN lighthouse account validator create \
+    --datadir /validator \
+    --testnet-dir /config/testnet \
+    --wallet-name "validator" \
+    --wallet-password /validator/password.txt \
+    --count 4

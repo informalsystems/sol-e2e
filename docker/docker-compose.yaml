@@ -1,0 +1,68 @@
+services:
+  reth:
+    build:
+      context: .
+      dockerfile: Dockerfile.reth
+    image: local/reth:latest
+    command: >
+      node
+      --chain /config/genesis.json
+      --authrpc.addr 0.0.0.0
+      --authrpc.port 8551
+      --authrpc.jwtsecret /config/jwt.hex
+      --disable-discovery
+      --nat none
+      --port 0
+    networks:
+      - devnet
+
+  lighthouse:
+    build:
+      context: .
+      dockerfile: Dockerfile.lighthouse
+    image: local/lighthouse:latest
+    command: >
+      lighthouse bn
+      --debug-level info
+      --http
+      --http-address 0.0.0.0
+      --http-port 5052
+      --execution-endpoint http://reth:8551
+      --execution-jwt /config/jwt.hex
+      --testnet-dir /config/testnet
+      --boot-nodes ""
+      --listen-address 0.0.0.0
+      --port 9000
+      --disable-upnp
+      --private
+      --disable-enr-auto-update
+      --disable-packet-filter
+      --disable-deposit-contract-sync
+      --allow-insecure-genesis-sync
+      --purge-db
+      --wss-checkpoint 0x0000000000000000000000000000000000000000000000000000000000000000:0
+    depends_on:
+      - reth
+    networks:
+      - devnet
+
+  validator:
+    build:
+      context: .
+      dockerfile: Dockerfile.validator
+    image: local/validator:latest
+    command: >
+      lighthouse vc
+      --debug-level info
+      --beacon-nodes http://lighthouse:5052
+      --testnet-dir /config/testnet
+      --datadir /validator
+      --graffiti "LocalDevNet"
+    depends_on:
+      - lighthouse
+    networks:
+      - devnet
+
+networks:
+  devnet:
+    driver: bridge
