@@ -7,4 +7,4 @@ cargo := "cargo"
     {{forge}} compile -C solidity
 
 @run-tests:
-    {{cargo}} nextest run
+    {{cargo}} nextest run --test-threads 1
