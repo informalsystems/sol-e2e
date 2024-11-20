@@ -35,6 +35,7 @@
               reth
               lighthouse
               foundry-bin
+              openssl
             ];
           };
 
@@ -45,6 +46,7 @@
               reth
               lighthouse
               foundry-bin
+              openssl
             ];
           };
 
