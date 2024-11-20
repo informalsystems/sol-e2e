@@ -7,4 +7,4 @@ cargo := "cargo"
     {{forge}} compile -C solidity
 
 @run-tests:
-    {{cargo}} nextest run --test-threads 1
+    {{cargo}} nextest run --no-capture # -j1 is enabled by no-capture
