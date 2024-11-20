@@ -115,20 +115,15 @@ impl EthereumNetwork for EthPkgKurtosis {
             .into_inner();
 
         // GET OUTPUT LINES
-        let timeout_future = tokio::time::sleep(Duration::from_secs(30));
-        tokio::pin!(timeout_future);
-
-        loop {
-            tokio::select! {
-                _ = &mut timeout_future => break,
-                resp = run_result.message() => {
-                    let Some(next_message) = resp? else { break };
-                    if let Some(InstructionResult(result)) = next_message.run_response_line {
-                        println!("{}", result.serialized_instruction_result);
-                    }
+        let _ = tokio::time::timeout(Duration::from_secs(30), async {
+            while let Some(next_message) = run_result.message().await? {
+                if let Some(InstructionResult(result)) = next_message.run_response_line {
+                    println!("{}", result.serialized_instruction_result);
                 }
             }
-        }
+            Ok::<_, anyhow::Error>(())
+        })
+        .await;
 
         Ok(())
     }

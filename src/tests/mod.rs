@@ -19,21 +19,19 @@ async fn test_eth_e2e(
 ) -> TestResult {
     network.start().await?;
 
-    let timeout = tokio::time::sleep(tokio::time::Duration::from_secs(180)); // 30 minutes
-    tokio::pin!(timeout);
-
-    loop {
-        tokio::select! {
-            _ = &mut timeout => {
-                network.stop().await?;
-                return Err("Network health check timed out after 3 minutes".into());
+    let result = tokio::time::timeout(tokio::time::Duration::from_secs(180), async {
+        loop {
+            if network.health_check().await.is_ok() {
+                break;
             }
-            _ = tokio::time::sleep(tokio::time::Duration::from_secs(1)) => {
-                if network.health_check().await.is_ok() {
-                    break;
-                }
-            }
+            tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
         }
+    })
+    .await;
+
+    if result.is_err() {
+        network.stop().await?;
+        return Err("Network health check timed out after 3 minutes".into());
     }
 
     let config = network.network_config();
