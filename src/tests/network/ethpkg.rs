@@ -1,7 +1,10 @@
 use super::{EthereumConfig, EthereumNetwork};
+use anyhow::Context;
 use bon::Builder;
 use core::net::Ipv4Addr;
-use kurtosis_sdk::enclave_api::starlark_run_response_line::RunResponseLine::InstructionResult;
+use core::net::SocketAddr;
+use kurtosis_sdk::enclave_api::starlark_run_response_line::RunResponseLine;
+use kurtosis_sdk::enclave_api::{GetServicesArgs, ServiceInfo};
 use kurtosis_sdk::{
     enclave_api::{
         api_container_service_client::ApiContainerServiceClient, ImageDownloadMode,
@@ -13,12 +16,15 @@ use kurtosis_sdk::{
 };
 use serde_json::json;
 use testresult::TestResult;
-use tokio::time::Duration;
 
 #[derive(Builder, Debug)]
 pub struct EthPkgKurtosis {
     #[builder(default = "ethpkg".into())]
-    enclave_name: String,
+    pub enclave_name: String,
+    pub el_socket: Option<SocketAddr>,
+    pub cl_socket: Option<SocketAddr>,
+    #[builder(default = 12)]
+    pub block_time: u64,
 }
 
 impl Default for EthPkgKurtosis {
@@ -29,6 +35,33 @@ impl Default for EthPkgKurtosis {
 
 pub const PRESENT_MINIMAL: &str = "minimal";
 pub const PRESENT_MAINNET: &str = "mainnet";
+
+pub fn get_service_port<'a>(
+    service_info: impl Iterator<Item = (&'a String, &'a ServiceInfo)>,
+    predicate: fn(&str) -> bool,
+    port_name: &str,
+) -> Option<(SocketAddr, SocketAddr)> {
+    for (service_id, info) in service_info {
+        if predicate(service_id) {
+            if let Some(public_port_info) = info.maybe_public_ports.get(port_name) {
+                let private_ip = &info.private_ip_addr;
+                let public_ip = &info.maybe_public_ip_addr;
+                let private_port_info = &info.private_ports[port_name];
+                let private_socket = SocketAddr::new(
+                    private_ip.parse().unwrap(),
+                    private_port_info.number.try_into().unwrap(),
+                );
+                let public_socket = SocketAddr::new(
+                    public_ip.parse().unwrap(),
+                    public_port_info.number.try_into().unwrap(),
+                );
+                return Some((private_socket, public_socket));
+            }
+        }
+    }
+
+    None
+}
 
 impl EthereumNetwork for EthPkgKurtosis {
     async fn start(&mut self) -> TestResult {
@@ -76,15 +109,16 @@ impl EthereumNetwork for EthPkgKurtosis {
             ],
             "network_params": {
                 "network": "kurtosis",
-                "preset": "mainnet",
-                "seconds_per_slot": 12,
+                // "preset": "mainnet",
+                "preset": "minimal",
+                "seconds_per_slot": self.block_time,
                 "num_validator_keys_per_node": 64,
                 "deneb_fork_epoch": 0
             },
-            "additional_services": [
-                "prometheus_grafana"
-            ],
-            "wait_for_finalization": true,
+            // "additional_services": [
+            //     "prometheus_grafana"
+            // ],
+            // "wait_for_finalization": true,
             "global_log_level": "info",
             "port_publisher": {
                 "el": {"enabled": true},
@@ -107,33 +141,78 @@ impl EthereumNetwork for EthPkgKurtosis {
                 cloud_instance_id: None,
                 cloud_user_id: None,
                 image_download_mode: Some(ImageDownloadMode::Missing.into()),
-                non_blocking_mode: None,
+                non_blocking_mode: Some(true),
                 github_auth_token: None,
                 starlark_package_content: None,
             })
             .await?
             .into_inner();
 
-        // GET OUTPUT LINES
-        let _ = tokio::time::timeout(Duration::from_secs(30), async {
+        // GET OUTPUT LINES WITH TIMEOUT
+        let result = tokio::time::timeout(tokio::time::Duration::from_secs(120), async {
             while let Some(next_message) = run_result.message().await? {
-                if let Some(InstructionResult(result)) = next_message.run_response_line {
-                    println!("{}", result.serialized_instruction_result);
+                match next_message.run_response_line {
+                    Some(RunResponseLine::InstructionResult(result)) => {
+                        println!("{}", result.serialized_instruction_result);
+                    }
+                    Some(RunResponseLine::RunFinishedEvent(result)) => {
+                        println!("Run finished: {:#?}", result);
+                        break;
+                    }
+                    _ => continue,
                 }
             }
-            Ok::<_, anyhow::Error>(())
+            Ok::<(), anyhow::Error>(())
         })
         .await;
+
+        match result {
+            Ok(Ok(())) => {}
+            Ok(Err(e)) => return Err(e.into()),
+            Err(_) => {
+                println!("Timeout occurred");
+                return Err("Operation timed out".into());
+            }
+        }
+
+        let resp = enclave
+            .get_services(GetServicesArgs {
+                service_identifiers: Default::default(),
+            })
+            .await?
+            .into_inner();
+
+        println!("Services: {:#?}", resp);
+
+        let el_socket = get_service_port(
+            resp.service_info.iter(),
+            |service_id| service_id.starts_with("el-"),
+            "rpc",
+        )
+        .context("Failed to get el endpoint")?;
+
+        let cl_socket = get_service_port(
+            resp.service_info.iter(),
+            |service_id| service_id.starts_with("cl-"),
+            "http",
+        )
+        .context("Failed to get cl endpoint")?;
+
+        println!("EL: {:?}", el_socket);
+        println!("CL: {:?}", cl_socket);
+
+        self.el_socket = Some(el_socket.1);
+        self.cl_socket = Some(cl_socket.1);
 
         Ok(())
     }
 
     fn network_config(&self) -> EthereumConfig {
         EthereumConfig {
-            ip: Ipv4Addr::UNSPECIFIED.into(),
-            port: 32002,
+            ip: self.el_socket.unwrap().ip(),
+            port: self.el_socket.unwrap().port(),
             mnemonics: vec!["giant issue aisle success illegal bike spike question tent bar rely arctic volcano long crawl hungry vocal artwork sniff fantasy very lucky have athlete".into()],
-            block_time: 12,
+            block_time: self.block_time,
         }
     }
 
