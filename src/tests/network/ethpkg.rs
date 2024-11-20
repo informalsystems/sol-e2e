@@ -19,6 +19,8 @@ use testresult::TestResult;
 
 #[derive(Builder, Debug)]
 pub struct EthPkgKurtosis {
+    #[builder(default = SocketAddr::new(Ipv4Addr::UNSPECIFIED.into(), 9710))]
+    pub kurtosis_engine_endpoint: SocketAddr,
     #[builder(default = "ethpkg".into())]
     pub enclave_name: String,
     pub el_socket: Option<SocketAddr>,
@@ -69,7 +71,7 @@ impl EthereumNetwork for EthPkgKurtosis {
 
         // CONNECT TO ENGINE
         let mut engine =
-            EngineServiceClient::connect(format!("http://{}:{}", Ipv4Addr::UNSPECIFIED, 9710))
+            EngineServiceClient::connect(format!("http://{}", self.kurtosis_engine_endpoint))
                 .await?;
 
         // CREATE ENCLAVE
@@ -208,7 +210,7 @@ impl EthereumNetwork for EthPkgKurtosis {
 
         // CONNECT TO ENGINE
         let mut engine =
-            EngineServiceClient::connect(format!("http://{}:{}", Ipv4Addr::UNSPECIFIED, 9710))
+            EngineServiceClient::connect(format!("http://{}", self.kurtosis_engine_endpoint))
                 .await?;
 
         // DESTROY ENCLAVE
