@@ -1,15 +1,15 @@
 use alloy::providers::{Provider, ProviderBuilder};
 use core::future::Future;
 use core::marker::Sync;
-use core::net::IpAddr;
+use core::net::SocketAddr;
 use testresult::TestResult;
 
 pub mod anvil;
 pub mod ethpkg;
 
 pub struct EthereumConfig {
-    pub ip: IpAddr,
-    pub port: u16,
+    pub el_socket: SocketAddr,
+    pub cl_socket: Option<SocketAddr>,
     pub mnemonics: Vec<String>,
     pub block_time: u64,
 }
@@ -21,10 +21,10 @@ pub trait EthereumNetwork: Sync + Send + Sized {
 
     fn health_check(&self) -> impl Future<Output = TestResult> + Send {
         async {
-            let EthereumConfig { ip, port, .. } = self.network_config();
+            let EthereumConfig { el_socket, .. } = self.network_config();
             let provider = ProviderBuilder::new()
                 .with_recommended_fillers()
-                .on_builtin(&format!("http://{}:{}", ip, port))
+                .on_builtin(&format!("http://{}", el_socket))
                 .await?;
             provider.get_chain_id().await?;
             Ok(())

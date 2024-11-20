@@ -1,4 +1,5 @@
 use core::net::Ipv4Addr;
+use core::net::SocketAddr;
 use testresult::TestResult;
 
 use alloy::node_bindings::{Anvil, AnvilInstance};
@@ -44,8 +45,8 @@ impl EthereumNetwork for AnvilPoA {
 
     fn network_config(&self) -> EthereumConfig {
         EthereumConfig {
-            ip: Ipv4Addr::UNSPECIFIED.into(),
-            port: self.port,
+            el_socket: SocketAddr::new(Ipv4Addr::UNSPECIFIED.into(), self.port),
+            cl_socket: None,
             mnemonics: vec![self.mnemonic.clone()],
             block_time: self.block_time,
         }

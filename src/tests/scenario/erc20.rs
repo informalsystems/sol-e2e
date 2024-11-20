@@ -26,13 +26,13 @@ pub struct ERC20Transfer;
 impl Scenario for ERC20Transfer {
     async fn run(&self, config: EthereumConfig) -> TestResult {
         let EthereumConfig {
-            ip,
-            port,
+            el_socket,
             mnemonics,
             block_time,
+            ..
         } = config;
 
-        let url = format!("http://{}:{}", ip, port).to_string();
+        let url = format!("http://{}", el_socket).to_string();
 
         let mnemonic = &mnemonics[0];
 

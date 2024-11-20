@@ -209,8 +209,8 @@ impl EthereumNetwork for EthPkgKurtosis {
 
     fn network_config(&self) -> EthereumConfig {
         EthereumConfig {
-            ip: self.el_socket.unwrap().ip(),
-            port: self.el_socket.unwrap().port(),
+            el_socket: self.el_socket.unwrap(),
+            cl_socket: self.cl_socket,
             mnemonics: vec!["giant issue aisle success illegal bike spike question tent bar rely arctic volcano long crawl hungry vocal artwork sniff fantasy very lucky have athlete".into()],
             block_time: self.block_time,
         }
