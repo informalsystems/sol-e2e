@@ -149,29 +149,16 @@ impl EthereumNetwork for EthPkgKurtosis {
             .into_inner();
 
         // GET OUTPUT LINES WITH TIMEOUT
-        let result = tokio::time::timeout(tokio::time::Duration::from_secs(120), async {
-            while let Some(next_message) = run_result.message().await? {
-                match next_message.run_response_line {
-                    Some(RunResponseLine::InstructionResult(result)) => {
-                        println!("{}", result.serialized_instruction_result);
-                    }
-                    Some(RunResponseLine::RunFinishedEvent(result)) => {
-                        println!("Run finished: {:#?}", result);
-                        break;
-                    }
-                    _ => continue,
+        while let Some(next_message) = run_result.message().await? {
+            match next_message.run_response_line {
+                Some(RunResponseLine::InstructionResult(result)) => {
+                    println!("{}", result.serialized_instruction_result);
                 }
-            }
-            Ok::<(), anyhow::Error>(())
-        })
-        .await;
-
-        match result {
-            Ok(Ok(())) => {}
-            Ok(Err(e)) => return Err(e.into()),
-            Err(_) => {
-                println!("Timeout occurred");
-                return Err("Operation timed out".into());
+                Some(RunResponseLine::RunFinishedEvent(result)) => {
+                    println!("Run finished: {:#?}", result);
+                    break;
+                }
+                _ => continue,
             }
         }
 
