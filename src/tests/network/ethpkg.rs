@@ -27,6 +27,8 @@ pub struct EthPkgKurtosis {
     pub cl_socket: Option<SocketAddr>,
     #[builder(default = 1)]
     pub block_time: u64,
+    #[builder(default = "abstract vacuum mammal awkward pudding scene penalty purchase dinner depart evoke puzzle".into())]
+    pub mnemonic: String,
 }
 
 impl Default for EthPkgKurtosis {
@@ -114,6 +116,7 @@ impl EthereumNetwork for EthPkgKurtosis {
                 // "preset": "mainnet",
                 "preset": "minimal",
                 "seconds_per_slot": self.block_time,
+                "preregistered_validator_keys_mnemonic": self.mnemonic,
                 "num_validator_keys_per_node": 64,
                 "deneb_fork_epoch": 0
             },
@@ -204,7 +207,7 @@ impl EthereumNetwork for EthPkgKurtosis {
         EthereumConfig {
             el_socket: self.el_socket.unwrap(),
             cl_socket: self.cl_socket,
-            mnemonics: vec!["giant issue aisle success illegal bike spike question tent bar rely arctic volcano long crawl hungry vocal artwork sniff fantasy very lucky have athlete".into()],
+            mnemonics: vec![self.mnemonic.clone()],
             block_time: self.block_time,
         }
     }
