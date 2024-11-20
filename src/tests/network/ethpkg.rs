@@ -23,7 +23,7 @@ pub struct EthPkgKurtosis {
     pub enclave_name: String,
     pub el_socket: Option<SocketAddr>,
     pub cl_socket: Option<SocketAddr>,
-    #[builder(default = 12)]
+    #[builder(default = 5)]
     pub block_time: u64,
 }
 
