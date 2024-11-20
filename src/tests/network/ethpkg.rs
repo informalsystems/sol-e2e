@@ -157,7 +157,13 @@ impl EthereumNetwork for EthPkgKurtosis {
                     println!("{}", result.serialized_instruction_result);
                 }
                 Some(RunResponseLine::RunFinishedEvent(result)) => {
-                    println!("Run finished: {:#?}", result);
+                    println!(
+                        "Run finished {}successfully.",
+                        if result.is_run_successful { "" } else { "un" }
+                    );
+                    if let Some(output) = result.serialized_output {
+                        println!("Output: {}", output);
+                    }
                     break;
                 }
                 _ => continue,
@@ -170,8 +176,6 @@ impl EthereumNetwork for EthPkgKurtosis {
             })
             .await?
             .into_inner();
-
-        println!("Services: {:#?}", resp);
 
         let el_socket = get_service_port(
             resp.service_info.iter(),
