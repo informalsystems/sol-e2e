@@ -39,3 +39,33 @@ async fn test_eth_e2e(
     network.stop().await?;
     resp
 }
+
+#[rstest]
+#[case(EthPkgKurtosis::default(), scenario::finality::Finality)]
+#[tokio::test]
+async fn test_beaconz_e2e(
+    #[case] mut network: impl Network,
+    #[case] scenario: impl Scenario,
+) -> TestResult {
+    network.start().await?;
+
+    let result = tokio::time::timeout(tokio::time::Duration::from_secs(180), async {
+        loop {
+            if network.health_check().await.is_ok() {
+                break;
+            }
+            tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+        }
+    })
+    .await;
+
+    if result.is_err() {
+        network.stop().await?;
+        return Err("Network health check timed out after 3 minutes".into());
+    }
+
+    let config = network.network_config();
+    let resp = scenario.run(config).await;
+    network.stop().await?;
+    resp
+}
