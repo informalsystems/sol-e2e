@@ -6,8 +6,6 @@ use helios_ethereum::rpc::http_rpc::HttpRpc;
 use helios_ethereum::rpc::ConsensusRpc;
 
 use super::Scenario;
-use alloy_rpc_types::beacon::header::HeadersResponse;
-use alloy_transport_http::Client;
 
 pub struct Finality;
 
@@ -43,23 +41,6 @@ impl Scenario for Finality {
             <HttpRpc as ConsensusRpc<MinimalConsensusSpec>>::get_block(&helios_client, 1).await?;
 
         println!("{:#?}", block);
-
-        let chain_id =
-            <HttpRpc as ConsensusRpc<MinimalConsensusSpec>>::chain_id(&helios_client).await?;
-
-        println!("{:#?}", chain_id);
-
-        let client = Client::new();
-
-        let _ = client
-            .get(format!(
-                "http://{}/eth/v1/beacon/headers",
-                cl_socket.unwrap()
-            ))
-            .send()
-            .await?
-            .json::<HeadersResponse>()
-            .await?;
 
         Ok(())
     }
