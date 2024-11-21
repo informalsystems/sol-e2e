@@ -100,15 +100,9 @@ impl EthereumNetwork for EthPkgKurtosis {
         let mut enclave =
             ApiContainerServiceClient::connect(format!("https://[::1]:{}", enclave_port)).await?;
 
-        // Create the configuration for a reth + lodestar network
-        // finality doesn't work with lighthouse
+        // finality doesn't work with lighthouse (default)
         let config = json!({
-            "participants": [
-                {
-                    "el_type": "reth",
-                    "cl_type": "lodestar",
-                }
-            ],
+            "participants": [{ "cl_type": "lodestar" }],
             "network_params": {
                 "network": "kurtosis",
                 // "preset": "mainnet",
