@@ -19,6 +19,8 @@ rstest = "0.23.0"
 serde_json = "1.0.133"
 testresult = "0.4.1"
 tokio = { version = "1.41.1", features = ["rt-multi-thread", "macros"] }
+alloy-transport-http = "0.6.4"
+alloy-rpc-types = { version = "0.6.4", features = ["beacon"] }
 
 [lints.clippy]
 std_instead_of_core = "warn"
