@@ -101,8 +101,12 @@ impl EthereumNetwork for EthPkgKurtosis {
             ApiContainerServiceClient::connect(format!("https://[::1]:{}", enclave_port)).await?;
 
         // finality doesn't work with lighthouse (default)
+        // transaction indexing with geth (default)
         let config = json!({
-            "participants": [{ "cl_type": "lodestar" }],
+            "participants": [{
+                "cl_type": "lodestar",
+                "el_type": "reth"
+            }],
             "network_params": {
                 "network": "kurtosis",
                 // "preset": "mainnet",
