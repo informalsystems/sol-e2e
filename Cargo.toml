@@ -21,6 +21,8 @@ testresult = "0.4.1"
 tokio = { version = "1.41.1", features = ["rt-multi-thread", "macros"] }
 alloy-transport-http = "0.6.4"
 alloy-rpc-types = { version = "0.6.4", features = ["beacon"] }
+helios-ethereum = { git = "https://github.com/a16z/helios", branch = "master" }
+helios-consensus-core = { git = "https://github.com/a16z/helios", branch = "master" }
 
 [lints.clippy]
 std_instead_of_core = "warn"
