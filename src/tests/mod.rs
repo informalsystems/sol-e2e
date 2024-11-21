@@ -14,7 +14,7 @@ use rstest::rstest;
 #[case::kurtosis_erc20_transfer(EthPkgKurtosis::default(), scenario::erc20::ERC20Transfer)]
 #[case::kurtosis_finality(EthPkgKurtosis::default(), scenario::finality::Finality)]
 #[tokio::test]
-async fn test_beaconz_e2e(
+async fn test_beacon_e2e(
     #[case] mut network: impl Network,
     #[case] scenario: impl Scenario,
 ) -> TestResult {
