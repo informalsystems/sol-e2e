@@ -106,9 +106,6 @@ impl EthereumNetwork for EthPkgKurtosis {
                 {
                     "el_type": "reth",
                     "cl_type": "lighthouse",
-                    "count": 1,
-                    "use_separate_vc": true,
-                    "vc_type": "lighthouse"
                 }
             ],
             "network_params": {
@@ -117,19 +114,8 @@ impl EthereumNetwork for EthPkgKurtosis {
                 "preset": "minimal",
                 "seconds_per_slot": self.block_time,
                 "preregistered_validator_keys_mnemonic": self.mnemonic,
-                "num_validator_keys_per_node": 64,
-                "deneb_fork_epoch": 0
             },
-            // "additional_services": [
-            //     "prometheus_grafana"
-            // ],
-            // "wait_for_finalization": true,
-            "global_log_level": "info",
-            "port_publisher": {
-                "el": {"enabled": true},
-                "cl": {"enabled": true},
-                "vc": {"enabled": true}
-            }
+            "wait_for_finalization": true,
         });
 
         // RUN STARLARK PACKAGE
