@@ -76,6 +76,22 @@ impl EthereumNetwork for EthPkgKurtosis {
             EngineServiceClient::connect(format!("http://{}", self.kurtosis_engine_endpoint))
                 .await?;
 
+        // DESTROY ENCLAVE IF EXISTS
+        if engine
+            .get_enclaves(())
+            .await?
+            .into_inner()
+            .enclave_info
+            .keys()
+            .any(|x| x == &enclave_name)
+        {
+            engine
+                .destroy_enclave(DestroyEnclaveArgs {
+                    enclave_identifier: enclave_name.clone(),
+                })
+                .await?;
+        }
+
         // CREATE ENCLAVE
         let create_enclave_response = engine
             .create_enclave(CreateEnclaveArgs {
