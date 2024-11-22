@@ -82,8 +82,8 @@ impl EthereumNetwork for EthPkgKurtosis {
             .await?
             .into_inner()
             .enclave_info
-            .keys()
-            .any(|x| x == &enclave_name)
+            .values()
+            .any(|x| x.name == enclave_name)
         {
             engine
                 .destroy_enclave(DestroyEnclaveArgs {
