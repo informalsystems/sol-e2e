@@ -6,6 +6,7 @@ use testresult::TestResult;
 
 pub mod anvil;
 pub mod ethpkg;
+pub mod env;
 
 pub struct EthereumConfig {
     pub el_socket: SocketAddr,

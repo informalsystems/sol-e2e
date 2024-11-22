@@ -16,6 +16,7 @@ use rstest::rstest;
 #[case::kurtosis_erc20_transfer(EthPkgKurtosis::default(), ERC20Transfer)]
 #[case::kurtosis_finality_endpoint(EthPkgKurtosis::default(), FinalityEndpoint)]
 #[case::kurtosis_finality_protobuf(EthPkgKurtosis::default(), FinalityProtobuf)]
+// #[case::kurtosis_finality_protobuf(network::env::EnvNetwork, FinalityProtobuf)]
 #[tokio::test]
 async fn test_beacon_e2e(
     #[case] mut network: impl Network,
