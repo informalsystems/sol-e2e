@@ -11,10 +11,23 @@ impl EthereumNetwork for EnvNetwork {
 
     fn network_config(&self) -> EthereumConfig {
         EthereumConfig {
-            el_socket: env!("EL_SOCKET").parse().unwrap(),
-            cl_socket: Some(env!("CL_SOCKET").parse().unwrap()),
-            mnemonics: vec![env!("MNEMONIC").to_string()],
-            block_time: env!("BLOCK_TIME").parse().unwrap(),
+            el_socket: std::env::var("EL_SOCKET")
+                .expect("missing EL_SOCKET")
+                .parse()
+                .unwrap(),
+            cl_socket: Some(
+                std::env::var("CL_SOCKET")
+                    .expect("missing CL_SOCKET")
+                    .parse()
+                    .unwrap(),
+            ),
+            mnemonics: vec![std::env::var("MNEMONIC")
+                .expect("missing MNEMONIC")
+                .to_string()],
+            block_time: std::env::var("BLOCK_TIME")
+                .expect("missing BLOCK_TIME")
+                .parse()
+                .unwrap(),
         }
     }
 
