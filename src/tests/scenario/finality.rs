@@ -72,7 +72,7 @@ impl Scenario for FinalityEndpoint {
         let light_client_updates = beacon_client.light_client_updates(0, 1).await?;
         println!("{}", serde_json::to_string_pretty(&light_client_updates)?);
 
-        assert_eq!(finality_update.data.attested_header, bootstrap.data.header);
+        assert_eq!(finality_update.data.finalized_header, bootstrap.data.header);
 
         Ok(())
     }
