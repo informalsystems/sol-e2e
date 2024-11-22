@@ -1,5 +1,6 @@
 use crate::tests::network::EthereumConfig;
 use anyhow::Context;
+use futures::TryStreamExt;
 use testresult::TestResult;
 
 use super::Scenario;
@@ -10,28 +11,44 @@ impl Scenario for FinalityEndpoint {
     async fn run(&self, config: EthereumConfig) -> TestResult {
         let EthereumConfig { cl_socket, .. } = config;
 
-        let beacon_client = beacon_api::client::BeaconApiClient::new(format!(
-            "http://{}",
-            cl_socket.context("no cl_socket")?
-        ))
-        .await?;
+        let cl_socket = cl_socket.context("no cl_socket")?;
+
+        let beacon_client =
+            beacon_api::client::BeaconApiClient::new(format!("http://{}", cl_socket)).await?;
 
         let spec = beacon_client.spec().await?;
         println!("{}", serde_json::to_string_pretty(&spec)?);
 
-        let seconds_per_sync_committee_period = spec.data.seconds_per_slot
-            * spec.data.slots_per_epoch
-            * spec.data.epochs_per_sync_committee_period;
+        {
+            let mut stream = reqwest::Client::new()
+                .get(format!("http://{}/eth/v1/events", cl_socket))
+                .query(&[("topics", "light_client_finality_update")])
+                .send()
+                .await?
+                .bytes_stream();
 
-        println!(
-            "wait for sync committee period: {} seconds",
-            seconds_per_sync_committee_period
-        );
+            loop {
+                if let Some(event) = stream.try_next().await? {
+                    if event.starts_with(b"event: light_client_finality_update\n") {
+                        break;
+                    }
+                }
+            }
+        }
 
-        tokio::time::sleep(tokio::time::Duration::from_secs(
-            seconds_per_sync_committee_period,
-        ))
-        .await;
+        // let seconds_per_sync_committee_period = spec.data.seconds_per_slot
+        //     * spec.data.slots_per_epoch
+        //     * spec.data.epochs_per_sync_committee_period;
+
+        // println!(
+        //     "wait for sync committee period: {} seconds",
+        //     seconds_per_sync_committee_period
+        // );
+
+        // tokio::time::sleep(tokio::time::Duration::from_secs(
+        //     seconds_per_sync_committee_period,
+        // ))
+        // .await;
 
         let finality_update = beacon_client.finality_update().await?;
         println!("{}", serde_json::to_string_pretty(&finality_update)?);
