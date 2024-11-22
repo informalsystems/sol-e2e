@@ -4,15 +4,18 @@ pub mod scenario;
 use network::anvil::AnvilPoA;
 use network::ethpkg::EthPkgKurtosis;
 use network::EthereumNetwork as Network;
+use scenario::erc20::ERC20Transfer;
+use scenario::finality::{FinalityEndpoint, FinalityProtobuf};
 use scenario::Scenario;
 use testresult::TestResult;
 
 use rstest::rstest;
 
 #[rstest]
-#[case::anvil_erc20_transfer(AnvilPoA::default(), scenario::erc20::ERC20Transfer)]
-#[case::kurtosis_erc20_transfer(EthPkgKurtosis::default(), scenario::erc20::ERC20Transfer)]
-#[case::kurtosis_finality(EthPkgKurtosis::default(), scenario::finality::Finality)]
+#[case::anvil_erc20_transfer(AnvilPoA::default(), ERC20Transfer)]
+#[case::kurtosis_erc20_transfer(EthPkgKurtosis::default(), ERC20Transfer)]
+#[case::kurtosis_finality_endpoint(EthPkgKurtosis::default(), FinalityEndpoint)]
+#[case::kurtosis_finality_protobuf(EthPkgKurtosis::default(), FinalityProtobuf)]
 #[tokio::test]
 async fn test_beacon_e2e(
     #[case] mut network: impl Network,
