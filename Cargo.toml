@@ -20,8 +20,8 @@ serde_json = "1.0.133"
 testresult = "0.4.1"
 tokio = { version = "1.41.1", features = ["rt-multi-thread", "macros"] }
 beacon-api = { git = "https://github.com/unionlabs/union", rev = "26b79f6" }
-unionlabs = { git = "https://github.com/unionlabs/union", rev = "7342fd9" }
-protos = { git = "https://github.com/unionlabs/union", rev = "7342fd9" }
+# unionlabs = { git = "https://github.com/unionlabs/union", rev = "7342fd9" }
+# protos = { git = "https://github.com/unionlabs/union", rev = "7342fd9" }
 
 [lints.clippy]
 std_instead_of_core = "warn"
