@@ -1,7 +1,22 @@
 use crate::tests::network::EthereumConfig;
+use alloy::transports::http::reqwest;
 use anyhow::Context;
 use futures::TryStreamExt;
+use protos::union::ibc::lightclients::ethereum::v1::Header as HeaderProto;
+use protos::union::ibc::lightclients::ethereum::v1::LightClientUpdate as LightClientUpdateProto;
+use protos::union::ibc::lightclients::ethereum::v1::SyncCommittee as SyncCommitteeProto;
 use testresult::TestResult;
+use unionlabs::hash::H256;
+use unionlabs::ibc::core::client::height::Height as EthHeight;
+use unionlabs::ibc::lightclients::ethereum::account_proof::AccountProof;
+use unionlabs::ibc::lightclients::ethereum::account_update::AccountUpdate;
+use unionlabs::ibc::lightclients::ethereum::header::Header as EthHeader;
+use unionlabs::{
+    ethereum::config::Minimal,
+    ibc::lightclients::ethereum::trusted_sync_committee::{
+        ActiveSyncCommittee, TrustedSyncCommittee,
+    },
+};
 
 use super::Scenario;
 
@@ -78,107 +93,119 @@ impl Scenario for FinalityEndpoint {
     }
 }
 
-// pub struct FinalityProtobuf;
+pub struct FinalityProtobuf;
 
-// impl Scenario for FinalityProtobuf {
-//     async fn run(&self, config: EthereumConfig) -> TestResult {
-//         use protos::union::ibc::lightclients::ethereum::v1::Header as HeaderProto;
-//         use protos::union::ibc::lightclients::ethereum::v1::LightClientUpdate as LightClientUpdateProto;
-//         use protos::union::ibc::lightclients::ethereum::v1::SyncCommittee as SyncCommitteeProto;
-//         use unionlabs::hash::H256;
-//         use unionlabs::ibc::core::client::height::Height as EthHeight;
-//         use unionlabs::ibc::lightclients::ethereum::account_proof::AccountProof;
-//         use unionlabs::ibc::lightclients::ethereum::account_update::AccountUpdate;
-//         use unionlabs::ibc::lightclients::ethereum::header::Header as EthHeader;
-//         use unionlabs::{
-//             ethereum::config::Minimal,
-//             ibc::lightclients::ethereum::trusted_sync_committee::{
-//                 self, ActiveSyncCommittee, TrustedSyncCommittee,
-//             },
-//         };
+impl Scenario for FinalityProtobuf {
+    async fn run(&self, config: EthereumConfig) -> TestResult {
+        let EthereumConfig { cl_socket, .. } = config;
 
-//         let EthereumConfig { cl_socket, .. } = config;
+        let cl_socket = cl_socket.context("no cl_socket")?;
 
-//         let beacon_client = beacon_api::client::BeaconApiClient::new(format!(
-//             "http://{}",
-//             cl_socket.context("no cl_socket")?
-//         ))
-//         .await?;
+        let beacon_client =
+            beacon_api::client::BeaconApiClient::new(format!("http://{}", cl_socket)).await?;
 
-//         let spec = beacon_client.spec().await?;
-//         println!("{}", serde_json::to_string_pretty(&spec)?);
+        let spec = beacon_client.spec().await?;
+        println!("{}", serde_json::to_string_pretty(&spec)?);
 
-//         let seconds_per_sync_committee_period = spec.data.seconds_per_slot
-//             * spec.data.slots_per_epoch
-//             * spec.data.epochs_per_sync_committee_period;
+        {
+            let mut stream = reqwest::Client::new()
+                .get(format!("http://{}/eth/v1/events", cl_socket))
+                .query(&[("topics", "light_client_finality_update")])
+                .send()
+                .await?
+                .bytes_stream();
 
-//         println!(
-//             "wait for sync committee period: {} seconds",
-//             seconds_per_sync_committee_period
-//         );
+            loop {
+                if let Some(event) = stream.try_next().await? {
+                    if event.starts_with(b"event: light_client_finality_update\n") {
+                        break;
+                    }
+                }
+            }
+        }
 
-//         tokio::time::sleep(tokio::time::Duration::from_secs(
-//             seconds_per_sync_committee_period,
-//         ))
-//         .await;
+        // let seconds_per_sync_committee_period = spec.data.seconds_per_slot
+        //     * spec.data.slots_per_epoch
+        //     * spec.data.epochs_per_sync_committee_period;
 
-//         let finality_update = beacon_client.finality_update().await?;
-//         println!("{}", serde_json::to_string_pretty(&finality_update)?);
+        // println!(
+        //     "wait for sync committee period: {} seconds",
+        //     seconds_per_sync_committee_period
+        // );
 
-//         let finalized_slot = finality_update.data.finalized_header.beacon.slot;
+        // tokio::time::sleep(tokio::time::Duration::from_secs(
+        //     seconds_per_sync_committee_period,
+        // ))
+        // .await;
 
-//         let finalized_header = beacon_client.header(finalized_slot.into()).await?;
-//         println!("{}", serde_json::to_string_pretty(&finalized_header)?);
+        let finality_update = beacon_client.finality_update().await?;
+        println!("{}", serde_json::to_string_pretty(&finality_update)?);
 
-//         let finalized_root = finalized_header.data.root;
+        let finalized_slot = finality_update.data.finalized_header.beacon.slot;
 
-//         let finalized_block = beacon_client.block(finalized_slot.into()).await?;
-//         println!("{}", serde_json::to_string_pretty(&finalized_block)?);
+        let finalized_header = beacon_client.header(finalized_slot.into()).await?;
+        println!("{}", serde_json::to_string_pretty(&finalized_header)?);
 
-//         let bootstrap = beacon_client.bootstrap(finalized_root).await?;
-//         println!("{}", serde_json::to_string_pretty(&bootstrap)?);
+        let finalized_root = finalized_header.data.root;
 
-//         //
-//         // header
-//         //
+        let finalized_block = beacon_client.block(finalized_slot.into()).await?;
+        println!("{}", serde_json::to_string_pretty(&finalized_block)?);
 
-//         let sync_committee_proto: SyncCommitteeProto =
-//             serde_json::from_slice(&serde_json::to_vec(&bootstrap.data.current_sync_committee)?)?;
+        let bootstrap = beacon_client.bootstrap(finalized_root).await?;
+        println!("{}", serde_json::to_string_pretty(&bootstrap)?);
 
-//         let sync_committee =
-//             ActiveSyncCommittee::<Minimal>::Current(sync_committee_proto.try_into()?);
+        //
+        // header
+        //
 
-//         // reusing the same finalized slot as dummy
-//         let trusted_sync_committee = TrustedSyncCommittee {
-//             trusted_height: EthHeight {
-//                 revision_height: 0,
-//                 revision_number: finalized_slot,
-//             },
-//             sync_committee,
-//         };
+        let sync_committee_proto = SyncCommitteeProto::from(bootstrap.data.current_sync_committee);
 
-//         let consensus_update_proto: LightClientUpdateProto =
-//             serde_json::from_slice(&serde_json::to_vec(&finality_update.data)?)?;
+        let sync_committee =
+            ActiveSyncCommittee::<Minimal>::Current(sync_committee_proto.try_into()?);
 
-//         // dummy account update
-//         let account_update = AccountUpdate {
-//             account_proof: AccountProof {
-//                 storage_root: H256::default(),
-//                 proof: vec![],
-//             },
-//         };
+        // reusing the same finalized slot as dummy
+        let trusted_sync_committee = TrustedSyncCommittee {
+            trusted_height: EthHeight {
+                revision_height: 0,
+                revision_number: finalized_slot,
+            },
+            sync_committee,
+        };
 
-//         let header = EthHeader {
-//             trusted_sync_committee,
-//             consensus_update: consensus_update_proto.try_into()?,
-//             account_update,
-//         };
+        let consensus_update_proto = LightClientUpdateProto {
+            attested_header: Some(finality_update.data.attested_header.into()),
+            // TODO: the light_client_update domain type ignores next_sync_committee
+            next_sync_committee: None,
+            next_sync_committee_branch: vec![],
+            finalized_header: Some(finality_update.data.finalized_header.into()),
+            finality_branch: finality_update
+                .data
+                .finality_branch
+                .map(|bytes| bytes.into())
+                .into(),
+            sync_aggregate: Some(finality_update.data.sync_aggregate.into()),
+            signature_slot: finality_update.data.signature_slot.into(),
+        };
 
-//         println!(
-//             "{}",
-//             serde_json::to_string_pretty(&HeaderProto::from(header))?
-//         );
+        // dummy account update
+        let account_update = AccountUpdate {
+            account_proof: AccountProof {
+                storage_root: H256::default(),
+                proof: vec![],
+            },
+        };
 
-//         Ok(())
-//     }
-// }
+        let header = EthHeader {
+            trusted_sync_committee,
+            consensus_update: consensus_update_proto.try_into()?,
+            account_update,
+        };
+
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&HeaderProto::from(header))?
+        );
+
+        Ok(())
+    }
+}
