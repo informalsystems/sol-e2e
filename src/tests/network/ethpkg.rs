@@ -148,7 +148,7 @@ impl EthereumNetwork for EthPkgKurtosis {
                 cloud_user_id: None,
                 image_download_mode: Some(ImageDownloadMode::Missing.into()),
                 non_blocking_mode: Some(true),
-                github_auth_token: None,
+                github_auth_token: std::env::var("GITHUB_TOKEN").ok(),
                 starlark_package_content: None,
             })
             .await?

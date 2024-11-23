@@ -52,6 +52,8 @@ jobs:
           nix build
           nix flake check --all-systems
       - name: Run Justfile
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: nix shell -c just
       - name: Setup tmate session
         if: ${{ failure() }}
