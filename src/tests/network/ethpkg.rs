@@ -161,10 +161,9 @@ impl EthereumNetwork for EthPkgKurtosis {
                     println!("{}", result.serialized_instruction_result);
                 }
                 Some(RunResponseLine::RunFinishedEvent(result)) => {
-                    println!(
-                        "Kurtosis run finished {}successfully.",
-                        if result.is_run_successful { "" } else { "un" }
-                    );
+                    if !result.is_run_successful {
+                        return Err("Kurtosis run failed".into());
+                    }
                     if let Some(output) = result.serialized_output {
                         println!("Output: {}", output);
                     }
