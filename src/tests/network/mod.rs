@@ -5,8 +5,8 @@ use core::net::SocketAddr;
 use testresult::TestResult;
 
 pub mod anvil;
-pub mod ethpkg;
 pub mod env;
+pub mod ethpkg;
 
 pub struct EthereumConfig {
     pub el_socket: SocketAddr,

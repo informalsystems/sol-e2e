@@ -154,16 +154,17 @@ impl Scenario for FinalityProtobuf {
         let bootstrap = beacon_client.bootstrap(finalized_root).await?;
         println!("{}", serde_json::to_string_pretty(&bootstrap)?);
 
+        let updates = beacon_client.light_client_updates(0, 1).await?;
+        println!("{}", serde_json::to_string_pretty(&updates)?);
+
         //
         // header
         //
 
-        let sync_committee_proto = SyncCommitteeProto::from(bootstrap.data.current_sync_committee);
+        let sync_committee = ActiveSyncCommittee::<Minimal>::Current(
+            SyncCommitteeProto::from(bootstrap.data.current_sync_committee).try_into()?,
+        );
 
-        let sync_committee =
-            ActiveSyncCommittee::<Minimal>::Current(sync_committee_proto.try_into()?);
-
-        // reusing the same finalized slot as dummy
         let trusted_sync_committee = TrustedSyncCommittee {
             trusted_height: EthHeight {
                 revision_height: 0,
@@ -172,22 +173,10 @@ impl Scenario for FinalityProtobuf {
             sync_committee,
         };
 
-        let consensus_update_proto = LightClientUpdateProto {
-            attested_header: Some(finality_update.data.attested_header.into()),
-            // TODO: the light_client_update domain type ignores next_sync_committee
-            next_sync_committee: None,
-            next_sync_committee_branch: vec![],
-            finalized_header: Some(finality_update.data.finalized_header.into()),
-            finality_branch: finality_update
-                .data
-                .finality_branch
-                .map(|bytes| bytes.into())
-                .into(),
-            sync_aggregate: Some(finality_update.data.sync_aggregate.into()),
-            signature_slot: finality_update.data.signature_slot.into(),
-        };
+        let consensus_update =
+            LightClientUpdateProto::from(updates.0[0].data.clone()).try_into()?;
 
-        // dummy account update
+        // TODO: query account proof from execution layer
         let account_update = AccountUpdate {
             account_proof: AccountProof {
                 storage_root: H256::default(),
@@ -197,7 +186,7 @@ impl Scenario for FinalityProtobuf {
 
         let header = EthHeader {
             trusted_sync_committee,
-            consensus_update: consensus_update_proto.try_into()?,
+            consensus_update,
             account_update,
         };
 
