@@ -53,3 +53,6 @@ jobs:
           nix flake check --all-systems
       - name: Run Justfile
         run: nix shell -c just
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
