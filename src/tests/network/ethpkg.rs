@@ -121,12 +121,11 @@ impl EthereumNetwork for EthPkgKurtosis {
         let config = json!({
             "participants": [{
                 "cl_type": "lodestar",
-                "el_type": "reth"
+                "el_type": "reth",
             }],
             "network_params": {
                 "network": "kurtosis",
-                // "preset": "mainnet",
-                "preset": "minimal",
+                "preset": PRESENT_MINIMAL,
                 "seconds_per_slot": self.block_time,
                 "preregistered_validator_keys_mnemonic": self.mnemonic,
             },
