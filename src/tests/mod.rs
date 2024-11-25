@@ -5,8 +5,9 @@ use network::anvil::AnvilPoA;
 use network::ethpkg::EthPkgKurtosis;
 use network::EthereumNetwork as Network;
 use rstest::rstest;
+use scenario::beacon::BeaconEndpoint;
 use scenario::erc20::ERC20Transfer;
-use scenario::finality::{FinalityEndpoint, FinalityProtobuf};
+use scenario::relayer::RelayerMsg;
 use testresult::TestResult;
 
 use crate::tests::scenario::Scenario;
@@ -14,8 +15,8 @@ use crate::tests::scenario::Scenario;
 #[rstest]
 #[case::anvil_erc20_transfer(AnvilPoA::default(), ERC20Transfer)]
 #[case::kurtosis_erc20_transfer(EthPkgKurtosis::default(), ERC20Transfer)]
-#[case::kurtosis_finality_endpoint(EthPkgKurtosis::default(), FinalityEndpoint)]
-#[case::kurtosis_finality_protobuf(EthPkgKurtosis::default(), FinalityProtobuf)]
+#[case::kurtosis_finality_endpoint(EthPkgKurtosis::default(), BeaconEndpoint)]
+#[case::kurtosis_finality_protobuf(EthPkgKurtosis::default(), RelayerMsg)]
 #[tokio::test]
 async fn test_beacon_e2e(
     #[case] mut network: impl Network,
