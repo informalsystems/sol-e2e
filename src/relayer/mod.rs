@@ -25,20 +25,20 @@ use unionlabs::ibc::lightclients::ethereum::trusted_sync_committee::{
 
 pub struct Relayer<C: Clone + SYNC_COMMITTEE_SIZE + BYTES_PER_LOGS_BLOOM + MAX_EXTRA_DATA_BYTES> {
     pub ibc_handler_address: Address,
-    pub cl_endpoint: SocketAddr,
-    pub el_endpoint: SocketAddr,
+    pub cl_socket: SocketAddr,
+    pub el_socket: SocketAddr,
     pub _phantom: std::marker::PhantomData<C>,
 }
 
 impl<C: Clone + SYNC_COMMITTEE_SIZE + BYTES_PER_LOGS_BLOOM + MAX_EXTRA_DATA_BYTES> Relayer<C> {
     pub async fn beacon_client(&self) -> anyhow::Result<BeaconApiClient> {
-        Ok(BeaconApiClient::new(format!("http://{}", self.cl_endpoint)).await?)
+        Ok(BeaconApiClient::new(format!("http://{}", self.cl_socket)).await?)
     }
 
     pub async fn provider(&self) -> anyhow::Result<impl Provider> {
         Ok(ProviderBuilder::new()
             .with_recommended_fillers()
-            .on_builtin(&format!("http://{}", self.el_endpoint))
+            .on_builtin(&format!("http://{}", self.el_socket))
             .await?)
     }
 

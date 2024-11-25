@@ -180,8 +180,8 @@ impl Scenario for FinalityProtobuf {
 
         let relayer = Relayer::<Minimal> {
             ibc_handler_address,
-            cl_endpoint: cl_socket.clone(),
-            el_endpoint: el_socket.clone(),
+            cl_socket: cl_socket.clone(),
+            el_socket: el_socket.clone(),
             _phantom: Default::default(),
         };
 
