@@ -122,6 +122,7 @@ impl EthereumNetwork for EthPkgKurtosis {
             "participants": [{
                 "cl_type": "lodestar",
                 "el_type": "reth",
+                "el_extra_params": ["--rpc.eth-proof-window=512"]
             }],
             "network_params": {
                 "network": "kurtosis",
