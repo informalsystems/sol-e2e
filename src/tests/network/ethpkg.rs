@@ -1,21 +1,18 @@
-use crate::tests::network::{EthereumConfig, EthereumNetwork};
+use core::net::{Ipv4Addr, SocketAddr};
+
 use anyhow::Context;
 use bon::Builder;
-use core::net::Ipv4Addr;
-use core::net::SocketAddr;
+use kurtosis_sdk::enclave_api::api_container_service_client::ApiContainerServiceClient;
 use kurtosis_sdk::enclave_api::starlark_run_response_line::RunResponseLine;
-use kurtosis_sdk::enclave_api::{GetServicesArgs, ServiceInfo};
-use kurtosis_sdk::{
-    enclave_api::{
-        api_container_service_client::ApiContainerServiceClient, ImageDownloadMode,
-        RunStarlarkPackageArgs,
-    },
-    engine_api::{
-        engine_service_client::EngineServiceClient, CreateEnclaveArgs, DestroyEnclaveArgs,
-    },
+use kurtosis_sdk::enclave_api::{
+    GetServicesArgs, ImageDownloadMode, RunStarlarkPackageArgs, ServiceInfo,
 };
+use kurtosis_sdk::engine_api::engine_service_client::EngineServiceClient;
+use kurtosis_sdk::engine_api::{CreateEnclaveArgs, DestroyEnclaveArgs};
 use serde_json::json;
 use testresult::TestResult;
+
+use crate::tests::network::{EthereumConfig, EthereumNetwork};
 
 #[derive(Builder, Debug)]
 pub struct EthPkgKurtosis {

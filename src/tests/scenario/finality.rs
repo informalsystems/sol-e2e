@@ -1,13 +1,17 @@
+use alloy::network::EthereumWallet;
+use alloy::primitives::U256;
+use alloy::providers::ProviderBuilder;
+use alloy::transports::http::reqwest;
+use alloy_signer_local::coins_bip39::English;
+use alloy_signer_local::MnemonicBuilder;
+use anyhow::Context;
+use futures::TryStreamExt;
+use testresult::TestResult;
+
 use crate::relayer::Relayer;
 use crate::tests::network::EthereumConfig;
 use crate::tests::scenario::erc20::Erc20;
 use crate::tests::scenario::Scenario;
-use alloy::transports::http::reqwest;
-use alloy::{network::EthereumWallet, primitives::U256, providers::ProviderBuilder};
-use alloy_signer_local::{coins_bip39::English, MnemonicBuilder};
-use anyhow::Context;
-use futures::TryStreamExt;
-use testresult::TestResult;
 
 pub struct FinalityEndpoint;
 

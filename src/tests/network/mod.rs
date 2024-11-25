@@ -1,7 +1,8 @@
-use alloy::providers::{Provider, ProviderBuilder};
 use core::future::Future;
 use core::marker::Sync;
 use core::net::SocketAddr;
+
+use alloy::providers::{Provider, ProviderBuilder};
 use testresult::TestResult;
 
 pub mod anvil;

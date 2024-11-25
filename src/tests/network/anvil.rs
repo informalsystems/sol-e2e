@@ -1,11 +1,10 @@
-use core::net::Ipv4Addr;
-use core::net::SocketAddr;
-use testresult::TestResult;
+use core::net::{Ipv4Addr, SocketAddr};
 
 use alloy::node_bindings::{Anvil, AnvilInstance};
+use bon::Builder;
+use testresult::TestResult;
 
 use crate::tests::network::{EthereumConfig, EthereumNetwork};
-use bon::Builder;
 
 #[derive(Builder, Debug)]
 pub struct AnvilPoA {

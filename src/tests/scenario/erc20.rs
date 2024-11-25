@@ -1,17 +1,13 @@
-use crate::tests::network::EthereumConfig;
-use alloy::primitives::{Address, FixedBytes};
-use alloy::providers::Provider;
-use alloy::providers::WalletProvider;
-use alloy::{
-    network::{Ethereum, EthereumWallet, NetworkWallet},
-    primitives::U256,
-    providers::ProviderBuilder,
-};
-use alloy_signer_local::{coins_bip39::English, MnemonicBuilder};
+use alloy::network::{Ethereum, EthereumWallet, NetworkWallet};
+use alloy::primitives::{Address, FixedBytes, U256};
+use alloy::providers::{Provider, ProviderBuilder, WalletProvider};
+use alloy_signer_local::coins_bip39::English;
+use alloy_signer_local::MnemonicBuilder;
 use alloy_sol_types::sol;
 use anyhow::Context;
 use testresult::TestResult;
 
+use crate::tests::network::EthereumConfig;
 use crate::tests::scenario::Scenario;
 
 sol!(

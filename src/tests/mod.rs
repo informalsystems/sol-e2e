@@ -1,16 +1,15 @@
 pub mod network;
 pub mod scenario;
 
-use crate::tests::scenario::Scenario;
 use network::anvil::AnvilPoA;
 use network::ethpkg::EthPkgKurtosis;
 use network::EthereumNetwork as Network;
+use rstest::rstest;
 use scenario::erc20::ERC20Transfer;
-use scenario::finality::FinalityEndpoint;
-use scenario::finality::FinalityProtobuf;
+use scenario::finality::{FinalityEndpoint, FinalityProtobuf};
 use testresult::TestResult;
 
-use rstest::rstest;
+use crate::tests::scenario::Scenario;
 
 #[rstest]
 #[case::anvil_erc20_transfer(AnvilPoA::default(), ERC20Transfer)]
