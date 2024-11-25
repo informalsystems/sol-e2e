@@ -7,6 +7,7 @@ use alloy_signer_local::MnemonicBuilder;
 use anyhow::Context;
 use futures::TryStreamExt;
 use testresult::TestResult;
+use unionlabs::ethereum::config::Minimal;
 
 use crate::relayer::Relayer;
 use crate::tests::network::EthereumConfig;
@@ -177,10 +178,11 @@ impl Scenario for FinalityProtobuf {
 
         println!("IBC Handler: {}", ibc_handler_address);
 
-        let relayer = Relayer {
+        let relayer = Relayer::<Minimal> {
             ibc_handler_address,
             cl_endpoint: cl_socket.clone(),
             el_endpoint: el_socket.clone(),
+            _phantom: Default::default(),
         };
 
         println!(

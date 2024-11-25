@@ -7,7 +7,9 @@ use beacon_api::client::{BeaconApiClient, BlockId};
 use protos::union::ibc::lightclients::ethereum::v1::{
     LightClientUpdate as LightClientUpdateProto, SyncCommittee as SyncCommitteeProto,
 };
-use unionlabs::ethereum::config::Minimal;
+use unionlabs::ethereum::config::{
+    BYTES_PER_LOGS_BLOOM, MAX_EXTRA_DATA_BYTES, SYNC_COMMITTEE_SIZE,
+};
 use unionlabs::ethereum::IBC_HANDLER_COMMITMENTS_SLOT;
 use unionlabs::ibc::core::client::height::Height;
 use unionlabs::ibc::lightclients::ethereum::account_proof::AccountProof;
@@ -21,13 +23,14 @@ use unionlabs::ibc::lightclients::ethereum::trusted_sync_committee::{
     ActiveSyncCommittee, TrustedSyncCommittee,
 };
 
-pub struct Relayer {
+pub struct Relayer<C: Clone + SYNC_COMMITTEE_SIZE + BYTES_PER_LOGS_BLOOM + MAX_EXTRA_DATA_BYTES> {
     pub ibc_handler_address: Address,
     pub cl_endpoint: SocketAddr,
     pub el_endpoint: SocketAddr,
+    pub _phantom: std::marker::PhantomData<C>,
 }
 
-impl Relayer {
+impl<C: Clone + SYNC_COMMITTEE_SIZE + BYTES_PER_LOGS_BLOOM + MAX_EXTRA_DATA_BYTES> Relayer<C> {
     pub async fn beacon_client(&self) -> anyhow::Result<BeaconApiClient> {
         Ok(BeaconApiClient::new(format!("http://{}", self.cl_endpoint)).await?)
     }
@@ -66,7 +69,7 @@ impl Relayer {
     pub async fn initialize(
         &self,
         slot: u64,
-    ) -> anyhow::Result<(ClientState, ConsensusState, TrustedSyncCommittee<Minimal>)> {
+    ) -> anyhow::Result<(ClientState, ConsensusState, TrustedSyncCommittee<C>)> {
         let beacon = self.beacon_client().await?;
         let provider = self.provider().await?;
 
@@ -156,8 +159,8 @@ impl Relayer {
 
     pub async fn header(
         &self,
-        mut trusted_sync_committee: TrustedSyncCommittee<Minimal>,
-    ) -> anyhow::Result<(Vec<Header<Minimal>>, TrustedSyncCommittee<Minimal>)> {
+        mut trusted_sync_committee: TrustedSyncCommittee<C>,
+    ) -> anyhow::Result<(Vec<Header<C>>, TrustedSyncCommittee<C>)> {
         let beacon = self.beacon_client().await?;
 
         let spec = beacon.spec().await?.data;
@@ -294,7 +297,7 @@ impl Relayer {
         Ok((headers, trusted_sync_committee))
     }
 
-    pub async fn misbehaviour(&self) -> anyhow::Result<Misbehaviour<Minimal>> {
+    pub async fn misbehaviour(&self) -> anyhow::Result<Misbehaviour<C>> {
         let _beacon = self.beacon_client().await?;
         let _provider = self.provider().await?;
 
