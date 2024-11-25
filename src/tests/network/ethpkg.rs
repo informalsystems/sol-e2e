@@ -49,12 +49,12 @@ pub fn get_service_port<'a>(
                 let public_ip = &info.maybe_public_ip_addr;
                 let private_port_info = &info.private_ports[port_name];
                 let private_socket = SocketAddr::new(
-                    private_ip.parse().unwrap(),
-                    private_port_info.number.try_into().unwrap(),
+                    private_ip.parse().expect("not an ip"),
+                    private_port_info.number.try_into().expect("not a port"),
                 );
                 let public_socket = SocketAddr::new(
-                    public_ip.parse().unwrap(),
-                    public_port_info.number.try_into().unwrap(),
+                    public_ip.parse().expect("not an ip"),
+                    public_port_info.number.try_into().expect("not a port"),
                 );
                 return Some((private_socket, public_socket));
             }
@@ -202,7 +202,7 @@ impl EthereumNetwork for EthPkgKurtosis {
 
     fn network_config(&self) -> EthereumConfig {
         EthereumConfig {
-            el_socket: self.el_socket.unwrap(),
+            el_socket: self.el_socket.expect("missing el socket"),
             cl_socket: self.cl_socket,
             mnemonics: vec![self.mnemonic.clone()],
         }

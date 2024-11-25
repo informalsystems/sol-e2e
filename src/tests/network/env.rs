@@ -14,12 +14,12 @@ impl EthereumNetwork for EnvNetwork {
             el_socket: std::env::var("EL_SOCKET")
                 .expect("missing EL_SOCKET")
                 .parse()
-                .unwrap(),
+                .expect("not a socket"),
             cl_socket: Some(
                 std::env::var("CL_SOCKET")
                     .expect("missing CL_SOCKET")
                     .parse()
-                    .unwrap(),
+                    .expect("not a socket"),
             ),
             mnemonics: vec![std::env::var("MNEMONIC")
                 .expect("missing MNEMONIC")
