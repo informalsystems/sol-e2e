@@ -24,10 +24,6 @@ impl EthereumNetwork for EnvNetwork {
             mnemonics: vec![std::env::var("MNEMONIC")
                 .expect("missing MNEMONIC")
                 .to_string()],
-            block_time: std::env::var("BLOCK_TIME")
-                .expect("missing BLOCK_TIME")
-                .parse()
-                .unwrap(),
         }
     }
 

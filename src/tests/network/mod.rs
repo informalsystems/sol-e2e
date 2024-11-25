@@ -13,7 +13,6 @@ pub struct EthereumConfig {
     pub el_socket: SocketAddr,
     pub cl_socket: Option<SocketAddr>,
     pub mnemonics: Vec<String>,
-    pub block_time: u64,
 }
 
 pub trait EthereumNetwork: Sync + Send + Sized {

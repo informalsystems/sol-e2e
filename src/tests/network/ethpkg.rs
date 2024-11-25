@@ -205,7 +205,6 @@ impl EthereumNetwork for EthPkgKurtosis {
             el_socket: self.el_socket.unwrap(),
             cl_socket: self.cl_socket,
             mnemonics: vec![self.mnemonic.clone()],
-            block_time: self.block_time,
         }
     }
 

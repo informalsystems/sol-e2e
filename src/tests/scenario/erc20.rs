@@ -17,6 +17,22 @@ sol!(
     "out/erc20.sol/Erc20.json",
 );
 
+pub async fn wait_for_next_block(provider: impl Provider) -> TestResult {
+    let current_block = provider.get_block_number().await?;
+    let next_block = current_block + 1;
+    loop {
+        if provider
+            .get_block_by_number(next_block.into(), Default::default())
+            .await?
+            .is_some()
+        {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+    }
+    Ok(())
+}
+
 pub struct ERC20Transfer;
 
 impl Scenario for ERC20Transfer {
@@ -24,7 +40,6 @@ impl Scenario for ERC20Transfer {
         let EthereumConfig {
             el_socket,
             mnemonics,
-            block_time,
             ..
         } = config;
 
@@ -60,7 +75,7 @@ impl Scenario for ERC20Transfer {
 
         let sender_address = NetworkWallet::<Ethereum>::default_signer_address(provider.wallet());
 
-        tokio::time::sleep(core::time::Duration::from_secs(block_time)).await;
+        wait_for_next_block(&provider).await?;
 
         let token_name = contract.name().call().await?;
         assert_eq!(token_name._0, name);
@@ -81,7 +96,7 @@ impl Scenario for ERC20Transfer {
         let pending_tx = transfer_call.send().await?;
         let tx_hash: FixedBytes<32> = *pending_tx.tx_hash();
 
-        tokio::time::sleep(core::time::Duration::from_secs(block_time)).await;
+        wait_for_next_block(&provider).await?;
 
         let receipt = provider
             .get_transaction_receipt(tx_hash)

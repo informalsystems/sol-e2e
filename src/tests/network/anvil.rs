@@ -47,7 +47,6 @@ impl EthereumNetwork for AnvilPoA {
             el_socket: SocketAddr::new(Ipv4Addr::UNSPECIFIED.into(), self.port),
             cl_socket: None,
             mnemonics: vec![self.mnemonic.clone()],
-            block_time: self.block_time,
         }
     }
 
