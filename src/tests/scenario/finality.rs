@@ -90,7 +90,7 @@ impl Scenario for FinalityProtobuf {
             el_socket,
             cl_socket,
             mnemonics,
-            block_time,
+            ..
         } = config;
 
         let cl_socket = cl_socket.context("no cl_socket")?;
@@ -101,20 +101,39 @@ impl Scenario for FinalityProtobuf {
         let spec = beacon_client.spec().await?.data;
         println!("{}", serde_json::to_string_pretty(&spec)?);
 
-        {
-            let mut stream = reqwest::Client::new()
-                .get(format!("http://{}/eth/v1/events", cl_socket))
-                .query(&[("topics", "light_client_finality_update")])
-                .send()
-                .await?
-                .bytes_stream();
+        let finalized_header = match beacon_client.finality_update().await {
+            Ok(finality_update) => finality_update.data.finalized_header,
+            Err(_) => {
+                let mut stream = reqwest::Client::new()
+                    .get(format!("http://{}/eth/v1/events", cl_socket))
+                    .query(&[("topics", "light_client_finality_update")])
+                    .send()
+                    .await?
+                    .bytes_stream();
 
-            loop {
-                if let Some(event) = stream.try_next().await? {
-                    if event.starts_with(b"event: light_client_finality_update\n") {
-                        break;
+                loop {
+                    if let Some(event) = stream.try_next().await? {
+                        if event.starts_with(b"event: light_client_finality_update\n") {
+                            break;
+                        }
                     }
                 }
+                beacon_client.finality_update().await?.data.finalized_header
+            }
+        };
+
+        {
+            // current period should be at least 2
+
+            let current_period = finalized_header.beacon.slot / spec.period();
+
+            println!("current period: {}", current_period);
+
+            if current_period < 2 {
+                tokio::time::sleep(core::time::Duration::from_secs(
+                    spec.seconds_per_slot * spec.period() * (2 - current_period),
+                ))
+                .await;
             }
         }
 
@@ -149,26 +168,25 @@ impl Scenario for FinalityProtobuf {
             )
             .await?;
 
-            tokio::time::sleep(core::time::Duration::from_secs(block_time)).await;
-
-            contract.address().clone()
+            *contract.address()
         };
+
+        println!("IBC Handler: {}", ibc_handler_address);
 
         let relayer = Relayer {
             ibc_handler_address,
             cl_endpoint: cl_socket.clone(),
-            el_endpoint: cl_socket.clone(),
+            el_endpoint: el_socket.clone(),
         };
 
-        tokio::time::sleep(core::time::Duration::from_secs(
-            spec.seconds_per_slot * spec.period(),
-        ))
-        .await;
+        println!(
+            "building initialize state at slot {}",
+            finalized_header.beacon.slot - 1
+        );
 
-        let finalized_header = beacon_client.finality_update().await?.data.finalized_header;
-
+        // initialize the relayer at a finalized header
         let (client_state, consensus_state, trusted_sync_committee) =
-            relayer.initialize(finalized_header.beacon.slot - 1).await?;
+            relayer.initialize(finalized_header.beacon.slot).await?;
 
         println!(
             "ClientState: {}",
@@ -184,7 +202,7 @@ impl Scenario for FinalityProtobuf {
         );
 
         tokio::time::sleep(core::time::Duration::from_secs(
-            spec.seconds_per_slot * spec.period() * 5,
+            spec.seconds_per_slot * spec.period() * 3,
         ))
         .await;
 

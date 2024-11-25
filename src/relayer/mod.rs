@@ -51,8 +51,7 @@ impl Relayer {
             .get_proof(self.ibc_handler_address, vec![])
             // NOTE: Proofs are from the execution layer, so we use execution height, not beacon slot.
             .block_id(execution_height.into())
-            .await
-            .unwrap();
+            .await?;
 
         Ok(AccountUpdate {
             account_proof: AccountProof {
@@ -77,8 +76,7 @@ impl Relayer {
 
         let genesis = beacon.genesis().await?.data;
 
-        let trusted_header = beacon.header(BlockId::Slot(slot)).await.unwrap().data;
-
+        let trusted_header = beacon.header(BlockId::Slot(slot)).await?.data;
         let bootstrap = beacon.bootstrap(trusted_header.root).await?.data;
 
         let spec = beacon.spec().await?.data;
