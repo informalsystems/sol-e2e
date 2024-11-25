@@ -12,7 +12,7 @@ use alloy_sol_types::sol;
 use anyhow::Context;
 use testresult::TestResult;
 
-use super::Scenario;
+use crate::tests::scenario::Scenario;
 
 sol!(
     #[sol(rpc)]

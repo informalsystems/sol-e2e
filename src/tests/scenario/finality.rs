@@ -1,44 +1,13 @@
-use super::erc20::Erc20;
-use super::Scenario;
 use crate::relayer::Relayer;
 use crate::tests::network::EthereumConfig;
-use alloy::consensus;
-use alloy::primitives::{Address, FixedBytes};
-use alloy::providers::Provider;
-use alloy::providers::WalletProvider;
+use crate::tests::scenario::erc20::Erc20;
+use crate::tests::scenario::Scenario;
 use alloy::transports::http::reqwest;
-use alloy::{
-    network::{Ethereum, EthereumWallet, NetworkWallet},
-    primitives::U256,
-    providers::ProviderBuilder,
-};
+use alloy::{network::EthereumWallet, primitives::U256, providers::ProviderBuilder};
 use alloy_signer_local::{coins_bip39::English, MnemonicBuilder};
-use alloy_sol_types::sol;
 use anyhow::Context;
 use futures::TryStreamExt;
-use protos::union::ibc::lightclients::ethereum::v1::ClientState as ClientStateProto;
-use protos::union::ibc::lightclients::ethereum::v1::ConsensusState as ConsensusStateProto;
-use protos::union::ibc::lightclients::ethereum::v1::Header as HeaderProto;
-use protos::union::ibc::lightclients::ethereum::v1::LightClientUpdate as LightClientUpdateProto;
-use protos::union::ibc::lightclients::ethereum::v1::Misbehaviour as MisbehaviorProto;
-use protos::union::ibc::lightclients::ethereum::v1::SyncCommittee as SyncCommitteeProto;
 use testresult::TestResult;
-use unionlabs::hash::H256;
-use unionlabs::ibc::core::client::height::Height;
-use unionlabs::ibc::lightclients::ethereum::account_proof::AccountProof;
-use unionlabs::ibc::lightclients::ethereum::account_update::AccountUpdate;
-use unionlabs::ibc::lightclients::ethereum::client_state::ClientState;
-use unionlabs::ibc::lightclients::ethereum::consensus_state::ConsensusState;
-use unionlabs::ibc::lightclients::ethereum::header::Header;
-use unionlabs::ibc::lightclients::ethereum::light_client_update::LightClientUpdate;
-use unionlabs::ibc::lightclients::ethereum::misbehaviour::Misbehaviour;
-use unionlabs::ibc::lightclients::ethereum::trusted_sync_committee;
-use unionlabs::{
-    ethereum::config::Minimal,
-    ibc::lightclients::ethereum::trusted_sync_committee::{
-        ActiveSyncCommittee, TrustedSyncCommittee,
-    },
-};
 
 pub struct FinalityEndpoint;
 

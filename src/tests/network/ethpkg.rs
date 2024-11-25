@@ -1,4 +1,4 @@
-use super::{EthereumConfig, EthereumNetwork};
+use crate::tests::network::{EthereumConfig, EthereumNetwork};
 use anyhow::Context;
 use bon::Builder;
 use core::net::Ipv4Addr;

@@ -1,6 +1,6 @@
 use testresult::TestResult;
 
-use super::{EthereumConfig, EthereumNetwork};
+use crate::tests::network::{EthereumConfig, EthereumNetwork};
 
 pub struct EnvNetwork;
 

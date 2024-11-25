@@ -6,23 +6,16 @@ use beacon_api::client::BeaconApiClient;
 use beacon_api::client::BlockId;
 use core::net::SocketAddr;
 use protos::union::ibc::lightclients::ethereum::v1::LightClientUpdate as LightClientUpdateProto;
-use protos::union::ibc::lightclients::ethereum::v1::Misbehaviour as MisbehaviorProto;
 use protos::union::ibc::lightclients::ethereum::v1::SyncCommittee as SyncCommitteeProto;
-use unionlabs::bls::BlsPublicKey;
-use unionlabs::ethereum::beacon::light_client_finality_update;
 use unionlabs::ethereum::IBC_HANDLER_COMMITMENTS_SLOT;
-use unionlabs::hash::H160;
 use unionlabs::ibc::core::client::height::Height;
 use unionlabs::ibc::lightclients::ethereum::account_proof::AccountProof;
-use unionlabs::ibc::lightclients::ethereum::account_update;
 use unionlabs::ibc::lightclients::ethereum::account_update::AccountUpdate;
 use unionlabs::ibc::lightclients::ethereum::client_state::ClientState;
 use unionlabs::ibc::lightclients::ethereum::consensus_state::ConsensusState;
 use unionlabs::ibc::lightclients::ethereum::header::Header;
-use unionlabs::ibc::lightclients::ethereum::light_client_update::LightClientUpdate;
 use unionlabs::ibc::lightclients::ethereum::light_client_update::UnboundedLightClientUpdate;
 use unionlabs::ibc::lightclients::ethereum::misbehaviour::Misbehaviour;
-use unionlabs::ibc::lightclients::ethereum::trusted_sync_committee;
 use unionlabs::{
     ethereum::config::Minimal,
     ibc::lightclients::ethereum::trusted_sync_committee::{
@@ -170,7 +163,6 @@ impl Relayer {
         mut trusted_sync_committee: TrustedSyncCommittee<Minimal>,
     ) -> anyhow::Result<(Vec<Header<Minimal>>, TrustedSyncCommittee<Minimal>)> {
         let beacon = self.beacon_client().await?;
-        let provider = self.provider().await?;
 
         let spec = beacon.spec().await?.data;
 
