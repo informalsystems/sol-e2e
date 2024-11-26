@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   justfile:
-    timeout-minutes: 10
+    timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -52,4 +52,9 @@ jobs:
           nix build
           nix flake check --all-systems
       - name: Run Justfile
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: nix shell -c just
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3

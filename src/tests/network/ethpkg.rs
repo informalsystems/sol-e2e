@@ -1,21 +1,18 @@
-use super::{EthereumConfig, EthereumNetwork};
+use core::net::{Ipv4Addr, SocketAddr};
+
 use anyhow::Context;
 use bon::Builder;
-use core::net::Ipv4Addr;
-use core::net::SocketAddr;
+use kurtosis_sdk::enclave_api::api_container_service_client::ApiContainerServiceClient;
 use kurtosis_sdk::enclave_api::starlark_run_response_line::RunResponseLine;
-use kurtosis_sdk::enclave_api::{GetServicesArgs, ServiceInfo};
-use kurtosis_sdk::{
-    enclave_api::{
-        api_container_service_client::ApiContainerServiceClient, ImageDownloadMode,
-        RunStarlarkPackageArgs,
-    },
-    engine_api::{
-        engine_service_client::EngineServiceClient, CreateEnclaveArgs, DestroyEnclaveArgs,
-    },
+use kurtosis_sdk::enclave_api::{
+    GetServicesArgs, ImageDownloadMode, RunStarlarkPackageArgs, ServiceInfo,
 };
+use kurtosis_sdk::engine_api::engine_service_client::EngineServiceClient;
+use kurtosis_sdk::engine_api::{CreateEnclaveArgs, DestroyEnclaveArgs};
 use serde_json::json;
 use testresult::TestResult;
+
+use crate::tests::network::{EthereumConfig, EthereumNetwork};
 
 #[derive(Builder, Debug)]
 pub struct EthPkgKurtosis {
@@ -52,12 +49,12 @@ pub fn get_service_port<'a>(
                 let public_ip = &info.maybe_public_ip_addr;
                 let private_port_info = &info.private_ports[port_name];
                 let private_socket = SocketAddr::new(
-                    private_ip.parse().unwrap(),
-                    private_port_info.number.try_into().unwrap(),
+                    private_ip.parse().expect("not an ip"),
+                    private_port_info.number.try_into().expect("not a port"),
                 );
                 let public_socket = SocketAddr::new(
-                    public_ip.parse().unwrap(),
-                    public_port_info.number.try_into().unwrap(),
+                    public_ip.parse().expect("not an ip"),
+                    public_port_info.number.try_into().expect("not a port"),
                 );
                 return Some((private_socket, public_socket));
             }
@@ -75,6 +72,22 @@ impl EthereumNetwork for EthPkgKurtosis {
         let mut engine =
             EngineServiceClient::connect(format!("http://{}", self.kurtosis_engine_endpoint))
                 .await?;
+
+        // DESTROY ENCLAVE IF EXISTS
+        if engine
+            .get_enclaves(())
+            .await?
+            .into_inner()
+            .enclave_info
+            .values()
+            .any(|x| x.name == enclave_name)
+        {
+            engine
+                .destroy_enclave(DestroyEnclaveArgs {
+                    enclave_identifier: enclave_name.clone(),
+                })
+                .await?;
+        }
 
         // CREATE ENCLAVE
         let create_enclave_response = engine
@@ -100,36 +113,21 @@ impl EthereumNetwork for EthPkgKurtosis {
         let mut enclave =
             ApiContainerServiceClient::connect(format!("https://[::1]:{}", enclave_port)).await?;
 
-        // Create the configuration for a reth + lighthouse network
+        // finality doesn't work with lighthouse (default)
+        // transaction indexing with geth (default)
         let config = json!({
-            "participants": [
-                {
-                    "el_type": "reth",
-                    "cl_type": "lighthouse",
-                    "count": 1,
-                    "use_separate_vc": true,
-                    "vc_type": "lighthouse"
-                }
-            ],
+            "participants": [{
+                "cl_type": "lodestar",
+                "el_type": "reth",
+                "el_extra_params": ["--rpc.eth-proof-window=512"]
+            }],
             "network_params": {
                 "network": "kurtosis",
-                // "preset": "mainnet",
-                "preset": "minimal",
+                "preset": PRESENT_MINIMAL,
                 "seconds_per_slot": self.block_time,
                 "preregistered_validator_keys_mnemonic": self.mnemonic,
-                "num_validator_keys_per_node": 64,
-                "deneb_fork_epoch": 0
             },
-            // "additional_services": [
-            //     "prometheus_grafana"
-            // ],
-            // "wait_for_finalization": true,
-            "global_log_level": "info",
-            "port_publisher": {
-                "el": {"enabled": true},
-                "cl": {"enabled": true},
-                "vc": {"enabled": true}
-            }
+            "wait_for_finalization": true,
         });
 
         // RUN STARLARK PACKAGE
@@ -147,7 +145,7 @@ impl EthereumNetwork for EthPkgKurtosis {
                 cloud_user_id: None,
                 image_download_mode: Some(ImageDownloadMode::Missing.into()),
                 non_blocking_mode: Some(true),
-                github_auth_token: None,
+                github_auth_token: std::env::var("GITHUB_TOKEN").ok(),
                 starlark_package_content: None,
             })
             .await?
@@ -160,10 +158,9 @@ impl EthereumNetwork for EthPkgKurtosis {
                     println!("{}", result.serialized_instruction_result);
                 }
                 Some(RunResponseLine::RunFinishedEvent(result)) => {
-                    println!(
-                        "Run finished {}successfully.",
-                        if result.is_run_successful { "" } else { "un" }
-                    );
+                    if !result.is_run_successful {
+                        return Err("Kurtosis run failed".into());
+                    }
                     if let Some(output) = result.serialized_output {
                         println!("Output: {}", output);
                     }
@@ -205,10 +202,9 @@ impl EthereumNetwork for EthPkgKurtosis {
 
     fn network_config(&self) -> EthereumConfig {
         EthereumConfig {
-            el_socket: self.el_socket.unwrap(),
+            el_socket: self.el_socket.expect("missing el socket"),
             cl_socket: self.cl_socket,
             mnemonics: vec![self.mnemonic.clone()],
-            block_time: self.block_time,
         }
     }
 

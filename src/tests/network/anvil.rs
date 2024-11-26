@@ -1,11 +1,10 @@
-use core::net::Ipv4Addr;
-use core::net::SocketAddr;
-use testresult::TestResult;
+use core::net::{Ipv4Addr, SocketAddr};
 
 use alloy::node_bindings::{Anvil, AnvilInstance};
+use bon::Builder;
+use testresult::TestResult;
 
 use crate::tests::network::{EthereumConfig, EthereumNetwork};
-use bon::Builder;
 
 #[derive(Builder, Debug)]
 pub struct AnvilPoA {
@@ -48,7 +47,6 @@ impl EthereumNetwork for AnvilPoA {
             el_socket: SocketAddr::new(Ipv4Addr::UNSPECIFIED.into(), self.port),
             cl_socket: None,
             mnemonics: vec![self.mnemonic.clone()],
-            block_time: self.block_time,
         }
     }
 

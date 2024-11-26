@@ -1,17 +1,18 @@
-use alloy::providers::{Provider, ProviderBuilder};
 use core::future::Future;
 use core::marker::Sync;
 use core::net::SocketAddr;
+
+use alloy::providers::{Provider, ProviderBuilder};
 use testresult::TestResult;
 
 pub mod anvil;
+pub mod env;
 pub mod ethpkg;
 
 pub struct EthereumConfig {
     pub el_socket: SocketAddr,
     pub cl_socket: Option<SocketAddr>,
     pub mnemonics: Vec<String>,
-    pub block_time: u64,
 }
 
 pub trait EthereumNetwork: Sync + Send + Sized {
