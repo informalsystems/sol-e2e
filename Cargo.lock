@@ -370,7 +370,7 @@ dependencies = [
  "const-hex",
  "derive_more 1.0.0",
  "foldhash",
- "hashbrown 0.15.1",
+ "hashbrown 0.15.2",
  "hex-literal",
  "indexmap 2.6.0",
  "itoa",
@@ -971,7 +971,7 @@ dependencies = [
 [[package]]
 name = "beacon-api"
 version = "0.1.0"
-source = "git+https://github.com/unionlabs/union?rev=1122218#112221878e23d8a2a4c77404bfe7c706a0050e34"
+source = "git+https://github.com/unionlabs/union?rev=22495bd#22495bd56e85f488fc8dd0115425e7bb47fb528e"
 dependencies = [
  "enumorph",
  "hex",
@@ -1105,9 +1105,9 @@ checksum = "56953345e39537a3e18bdaeba4cb0c58a78c1f61f361dc0fa7c5c7340ae87c5f"
 
 [[package]]
 name = "bon"
-version = "3.0.2"
+version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a636f83af97c6946f3f5cf5c268ec02375bf5efd371110292dfd57961f57a509"
+checksum = "790d33b1027fac712b9cd2079bfb7978fe90a6aac7c7b97abe32377e699fe08f"
 dependencies = [
  "bon-macros",
  "rustversion",
@@ -1115,9 +1115,9 @@ dependencies = [
 
 [[package]]
 name = "bon-macros"
-version = "3.0.2"
+version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7eaf1bfaa5b8d512abfd36d0c432591fef139d3de9ee54f1f839ea109d70d33"
+checksum = "447acd38643a31ee16063f92ee56c56b2694a4ecae79eba7b67a356f37b19575"
 dependencies = [
  "darling 0.20.10",
  "ident_case",
@@ -1388,7 +1388,7 @@ checksum = "7c74b8349d32d297c9134b8c88677813a227df8f779daa29bfc29c183fe3dca6"
 [[package]]
 name = "contracts"
 version = "0.0.0"
-source = "git+https://github.com/unionlabs/union?rev=1122218#112221878e23d8a2a4c77404bfe7c706a0050e34"
+source = "git+https://github.com/unionlabs/union?rev=22495bd#22495bd56e85f488fc8dd0115425e7bb47fb528e"
 dependencies = [
  "ethers",
  "serde",
@@ -1688,6 +1688,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.89",
+]
+
+[[package]]
+name = "dlmalloc"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "203540e710bfadb90e5e29930baf5d10270cec1f43ab34f46f78b147b2de715a"
+dependencies = [
+ "libc",
 ]
 
 [[package]]
@@ -2347,9 +2356,9 @@ checksum = "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1"
 
 [[package]]
 name = "hashbrown"
-version = "0.15.1"
+version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a9bfc1af68b1726ea47d3d5109de126281def866b33970e10fbab11b5dafab3"
+checksum = "bf151400ff0baff5465007dd2f3e717f3fe502074ca563069ce3a6629d07b289"
 dependencies = [
  "allocator-api2",
  "equivalent",
@@ -2599,6 +2608,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "ics008-wasm-client"
+version = "0.1.0"
+source = "git+https://github.com/unionlabs/union?rev=22495bd#22495bd56e85f488fc8dd0115425e7bb47fb528e"
+dependencies = [
+ "cosmwasm-std",
+ "dlmalloc",
+ "frame-support-procedural",
+ "macros",
+ "prost 0.12.6",
+ "protos",
+ "serde",
+ "serde-utils",
+ "thiserror",
+ "unionlabs",
+]
+
+[[package]]
 name = "icu_collections"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2822,7 +2848,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "707907fe3c25f5424cce2cb7e1cbcafee6bdbe735ca90ef77c29e84591e5b9da"
 dependencies = [
  "equivalent",
- "hashbrown 0.15.1",
+ "hashbrown 0.15.2",
  "serde",
 ]
 
@@ -2870,9 +2896,9 @@ dependencies = [
 
 [[package]]
 name = "itoa"
-version = "1.0.13"
+version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "540654e97a3f4470a492cd30ff187bc95d89557a903a2bbf112e2fae98104ef2"
+checksum = "d75a2a4b1b190afb6f5425f10f6a8f959d2ea0b9c2b1d79553551850539e4674"
 
 [[package]]
 name = "js-sys"
@@ -2937,9 +2963,9 @@ checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
 name = "libc"
-version = "0.2.164"
+version = "0.2.165"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "433bfe06b8c75da9b2e3fbea6e5329ff87748f0b144ef75306e674c3f6f7c13f"
+checksum = "fcb4d3d38eab6c5239a362fa8bae48c03baf980a6e7079f063942d563ef3533e"
 
 [[package]]
 name = "libm"
@@ -2981,7 +3007,7 @@ version = "0.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "234cf4f4a04dc1f57e24b96cc0cd600cf2af460d4161ac5ecdd0af8e1f3b2a38"
 dependencies = [
- "hashbrown 0.15.1",
+ "hashbrown 0.15.2",
 ]
 
 [[package]]
@@ -3035,7 +3061,7 @@ dependencies = [
 [[package]]
 name = "macros"
 version = "0.1.0"
-source = "git+https://github.com/unionlabs/union?rev=1122218#112221878e23d8a2a4c77404bfe7c706a0050e34"
+source = "git+https://github.com/unionlabs/union?rev=22495bd#22495bd56e85f488fc8dd0115425e7bb47fb528e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3681,7 +3707,7 @@ dependencies = [
 [[package]]
 name = "protos"
 version = "0.0.0"
-source = "git+https://github.com/unionlabs/union?rev=1122218#112221878e23d8a2a4c77404bfe7c706a0050e34"
+source = "git+https://github.com/unionlabs/union?rev=22495bd#22495bd56e85f488fc8dd0115425e7bb47fb528e"
 dependencies = [
  "chrono",
  "pbjson-types",
@@ -4343,7 +4369,7 @@ dependencies = [
 [[package]]
 name = "serde-utils"
 version = "0.1.0"
-source = "git+https://github.com/unionlabs/union?rev=1122218#112221878e23d8a2a4c77404bfe7c706a0050e34"
+source = "git+https://github.com/unionlabs/union?rev=22495bd#22495bd56e85f488fc8dd0115425e7bb47fb528e"
 dependencies = [
  "base64 0.21.7",
  "bitvec",
@@ -4514,6 +4540,7 @@ dependencies = [
  "beacon-api",
  "bon",
  "futures",
+ "ics008-wasm-client",
  "kurtosis-sdk",
  "protos",
  "reqwest 0.12.9",
@@ -4557,7 +4584,7 @@ dependencies = [
 [[package]]
 name = "ssz"
 version = "0.5.3"
-source = "git+https://github.com/unionlabs/union?rev=1122218#112221878e23d8a2a4c77404bfe7c706a0050e34"
+source = "git+https://github.com/unionlabs/union?rev=22495bd#22495bd56e85f488fc8dd0115425e7bb47fb528e"
 dependencies = [
  "derivative",
  "itertools 0.10.5",
@@ -4574,7 +4601,7 @@ dependencies = [
 [[package]]
 name = "ssz-derive"
 version = "0.5.3"
-source = "git+https://github.com/unionlabs/union?rev=1122218#112221878e23d8a2a4c77404bfe7c706a0050e34"
+source = "git+https://github.com/unionlabs/union?rev=22495bd#22495bd56e85f488fc8dd0115425e7bb47fb528e"
 dependencies = [
  "darling 0.13.4",
  "proc-macro2",
@@ -5098,9 +5125,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-core"
-version = "0.1.32"
+version = "0.1.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c06d3da6113f116aaee68e4d601191614c9053067f9ab7f6edbcb161237daa54"
+checksum = "e672c95779cf947c5311f83787af4fa8fffd12fb27e4993211a84bdfd9610f9c"
 dependencies = [
  "once_cell",
 ]
@@ -5179,7 +5206,7 @@ checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 [[package]]
 name = "unionlabs"
 version = "0.1.0"
-source = "git+https://github.com/unionlabs/union?rev=1122218#112221878e23d8a2a4c77404bfe7c706a0050e34"
+source = "git+https://github.com/unionlabs/union?rev=22495bd#22495bd56e85f488fc8dd0115425e7bb47fb528e"
 dependencies = [
  "alloy 0.4.2",
  "base64 0.21.7",
