@@ -91,6 +91,7 @@ impl Scenario for RelayerMsg {
             let decimals = 18u8;
             let total_supply = U256::from(1_000_000);
 
+            // TODO(rano): deploy the actual IBC contract
             let contract = Erc20::deploy(
                 &provider,
                 name.clone(),
