@@ -55,9 +55,10 @@ impl<C: Clone + SYNC_COMMITTEE_SIZE + BYTES_PER_LOGS_BLOOM + MAX_EXTRA_DATA_BYTE
 
         let execution_height = beacon.execution_height(BlockId::Slot(slot)).await?;
 
-        // TODO(rano): which part of the merkle path should be used?
+        // taking the first key_path from each merkle path
+        // https://github.com/gjermundgaraba/union/blob/10355e6/light-clients/ethereum-light-client/src/client.rs#L87
         let paths =
-            merkle_paths.map(|path| path.key_path.into_iter().last().map(Into::into).unwrap());
+            merkle_paths.map(|path| path.key_path.into_iter().next().map(Into::into).unwrap());
 
         let locations = paths.map(|path| ibc_commitment_key_v2(path, IBC_HANDLER_COMMITMENTS_SLOT));
 
