@@ -55,19 +55,26 @@ impl<C: Clone + SYNC_COMMITTEE_SIZE + BYTES_PER_LOGS_BLOOM + MAX_EXTRA_DATA_BYTE
 
         let execution_height = beacon.execution_height(BlockId::Slot(slot)).await?;
 
-        // taking the first key_path from each merkle path
-        // https://github.com/gjermundgaraba/union/blob/10355e6/light-clients/ethereum-light-client/src/client.rs#L87
-        let paths =
-            merkle_paths.map(|path| path.key_path.into_iter().next().map(Into::into).unwrap());
-
-        let locations = paths.map(|path| ibc_commitment_key_v2(path, IBC_HANDLER_COMMITMENTS_SLOT));
-
         let response = provider
             .get_proof(
                 self.ibc_handler_address,
-                locations
-                    .map(|location| location.to_be_bytes().into())
-                    .to_vec(),
+                merkle_paths
+                    .into_iter()
+                    .map(|merkle_path| {
+                        merkle_path
+                            .key_path
+                            .into_iter()
+                            // take only the first key_path from a merkle path
+                            // https://github.com/gjermundgaraba/union/blob/10355e6/light-clients/ethereum-light-client/src/client.rs#L87
+                            .next()
+                            .context("key_path is empty")
+                            .map(|key| {
+                                ibc_commitment_key_v2(key.into(), IBC_HANDLER_COMMITMENTS_SLOT)
+                                    .to_be_bytes()
+                                    .into()
+                            })
+                    })
+                    .collect::<Result<_, _>>()?,
             )
             .block_id(execution_height.into())
             .await
