@@ -4,13 +4,14 @@ use alloy::primitives::Address;
 use alloy::providers::{Provider, ProviderBuilder};
 use anyhow::Context;
 use beacon_api::client::{BeaconApiClient, BlockId};
+use ics008_wasm_client::MerklePath;
 use protos::union::ibc::lightclients::ethereum::v1::{
     LightClientUpdate as LightClientUpdateProto, SyncCommittee as SyncCommitteeProto,
 };
 use unionlabs::ethereum::config::{
     BYTES_PER_LOGS_BLOOM, MAX_EXTRA_DATA_BYTES, SYNC_COMMITTEE_SIZE,
 };
-use unionlabs::ethereum::{ibc_commitment_key, IBC_HANDLER_COMMITMENTS_SLOT};
+use unionlabs::ethereum::{ibc_commitment_key_v2, IBC_HANDLER_COMMITMENTS_SLOT};
 use unionlabs::ibc::core::client::height::Height;
 use unionlabs::ibc::lightclients::ethereum::account_proof::AccountProof;
 use unionlabs::ibc::lightclients::ethereum::account_update::AccountUpdate;
@@ -23,7 +24,6 @@ use unionlabs::ibc::lightclients::ethereum::storage_proof::StorageProof;
 use unionlabs::ibc::lightclients::ethereum::trusted_sync_committee::{
     ActiveSyncCommittee, TrustedSyncCommittee,
 };
-use unionlabs::ics24::Path as Ics24Path;
 use unionlabs::uint::U256;
 
 pub struct Relayer<C: Clone + SYNC_COMMITTEE_SIZE + BYTES_PER_LOGS_BLOOM + MAX_EXTRA_DATA_BYTES> {
@@ -48,15 +48,18 @@ impl<C: Clone + SYNC_COMMITTEE_SIZE + BYTES_PER_LOGS_BLOOM + MAX_EXTRA_DATA_BYTE
     pub async fn account_proof<const N: usize>(
         &self,
         slot: u64,
-        paths: [Ics24Path; N],
+        merkle_paths: [MerklePath; N],
     ) -> anyhow::Result<(AccountProof, [StorageProof; N])> {
         let beacon = self.beacon_client().await?;
         let provider = self.provider().await?;
 
         let execution_height = beacon.execution_height(BlockId::Slot(slot)).await?;
 
-        let locations =
-            paths.map(|path| ibc_commitment_key(&path.to_string(), IBC_HANDLER_COMMITMENTS_SLOT));
+        // TODO(rano): which part of the merkle path should be used?
+        let paths =
+            merkle_paths.map(|path| path.key_path.into_iter().last().map(Into::into).unwrap());
+
+        let locations = paths.map(|path| ibc_commitment_key_v2(path, IBC_HANDLER_COMMITMENTS_SLOT));
 
         let response = provider
             .get_proof(
