@@ -30,7 +30,7 @@ pub struct Relayer<C: Clone + SYNC_COMMITTEE_SIZE + BYTES_PER_LOGS_BLOOM + MAX_E
     pub ibc_handler_address: Address,
     pub cl_socket: SocketAddr,
     pub el_socket: SocketAddr,
-    pub _phantom: std::marker::PhantomData<C>,
+    pub _phantom: core::marker::PhantomData<C>,
 }
 
 impl<C: Clone + SYNC_COMMITTEE_SIZE + BYTES_PER_LOGS_BLOOM + MAX_EXTRA_DATA_BYTES> Relayer<C> {
@@ -140,7 +140,7 @@ impl<C: Clone + SYNC_COMMITTEE_SIZE + BYTES_PER_LOGS_BLOOM + MAX_EXTRA_DATA_BYTE
                 revision_height: 0,
             },
             ibc_commitment_slot: IBC_HANDLER_COMMITMENTS_SLOT,
-            ibc_contract_address: self.ibc_handler_address.0 .0.try_into()?,
+            ibc_contract_address: self.ibc_handler_address.0 .0.into(),
         };
 
         let account_update = self

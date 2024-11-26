@@ -107,8 +107,8 @@ impl Scenario for RelayerMsg {
 
         let relayer = Relayer::<Minimal> {
             ibc_handler_address,
-            cl_socket: cl_socket.clone(),
-            el_socket: el_socket.clone(),
+            cl_socket,
+            el_socket,
             _phantom: Default::default(),
         };
 

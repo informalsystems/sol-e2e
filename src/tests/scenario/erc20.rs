@@ -28,7 +28,7 @@ pub async fn wait_for_next_block(provider: impl Provider) -> TestResult {
         {
             break;
         }
-        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+        tokio::time::sleep(core::time::Duration::from_secs(1)).await;
     }
     Ok(())
 }
