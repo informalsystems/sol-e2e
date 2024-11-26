@@ -10,7 +10,7 @@ use protos::union::ibc::lightclients::ethereum::v1::{
 use unionlabs::ethereum::config::{
     BYTES_PER_LOGS_BLOOM, MAX_EXTRA_DATA_BYTES, SYNC_COMMITTEE_SIZE,
 };
-use unionlabs::ethereum::IBC_HANDLER_COMMITMENTS_SLOT;
+use unionlabs::ethereum::{ibc_commitment_key, IBC_HANDLER_COMMITMENTS_SLOT};
 use unionlabs::ibc::core::client::height::Height;
 use unionlabs::ibc::lightclients::ethereum::account_proof::AccountProof;
 use unionlabs::ibc::lightclients::ethereum::account_update::AccountUpdate;
@@ -19,9 +19,12 @@ use unionlabs::ibc::lightclients::ethereum::consensus_state::ConsensusState;
 use unionlabs::ibc::lightclients::ethereum::header::Header;
 use unionlabs::ibc::lightclients::ethereum::light_client_update::UnboundedLightClientUpdate;
 use unionlabs::ibc::lightclients::ethereum::misbehaviour::Misbehaviour;
+use unionlabs::ibc::lightclients::ethereum::storage_proof::StorageProof;
 use unionlabs::ibc::lightclients::ethereum::trusted_sync_committee::{
     ActiveSyncCommittee, TrustedSyncCommittee,
 };
+use unionlabs::ics24::Path as Ics24Path;
+use unionlabs::uint::U256;
 
 pub struct Relayer<C: Clone + SYNC_COMMITTEE_SIZE + BYTES_PER_LOGS_BLOOM + MAX_EXTRA_DATA_BYTES> {
     pub ibc_handler_address: Address,
@@ -42,28 +45,52 @@ impl<C: Clone + SYNC_COMMITTEE_SIZE + BYTES_PER_LOGS_BLOOM + MAX_EXTRA_DATA_BYTE
             .await?)
     }
 
-    pub async fn account_update(&self, slot: u64) -> anyhow::Result<AccountUpdate> {
+    pub async fn account_proof<const N: usize>(
+        &self,
+        slot: u64,
+        paths: [Ics24Path; N],
+    ) -> anyhow::Result<(AccountProof, [StorageProof; N])> {
         let beacon = self.beacon_client().await?;
         let provider = self.provider().await?;
 
         let execution_height = beacon.execution_height(BlockId::Slot(slot)).await?;
 
-        let account_update = provider
-            .get_proof(self.ibc_handler_address, vec![])
-            // NOTE: Proofs are from the execution layer, so we use execution height, not beacon slot.
-            .block_id(execution_height.into())
-            .await?;
+        let locations =
+            paths.map(|path| ibc_commitment_key(&path.to_string(), IBC_HANDLER_COMMITMENTS_SLOT));
 
-        Ok(AccountUpdate {
-            account_proof: AccountProof {
-                storage_root: account_update.storage_hash.into(),
-                proof: account_update
-                    .account_proof
+        let response = provider
+            .get_proof(
+                self.ibc_handler_address,
+                locations
+                    .map(|location| location.to_be_bytes().into())
+                    .to_vec(),
+            )
+            .block_id(execution_height.into())
+            .await
+            .unwrap();
+
+        let account_proof = AccountProof {
+            storage_root: response.storage_hash.into(),
+            proof: response
+                .account_proof
+                .into_iter()
+                .map(|x| x.to_vec())
+                .collect(),
+        };
+
+        let storage_proofs = <[_; N]>::try_from(response.storage_proof)
+            .map_err(|x| anyhow::anyhow!("length should be {} but got {}", N, x.len()))?
+            .map(|proof| StorageProof {
+                key: U256::from_be_bytes(proof.key.as_b256().0),
+                value: U256::from_limbs(proof.value.into_limbs()),
+                proof: proof
+                    .proof
                     .into_iter()
-                    .map(|x| x.to_vec())
+                    .map(|bytes| bytes.to_vec())
                     .collect(),
-            },
-        })
+            });
+
+        Ok((account_proof, storage_proofs))
     }
 
     pub async fn initialize(
@@ -89,13 +116,8 @@ impl<C: Clone + SYNC_COMMITTEE_SIZE + BYTES_PER_LOGS_BLOOM + MAX_EXTRA_DATA_BYTE
 
             let light_client_updates = beacon.light_client_updates(current_period, 1).await?;
 
-            let [update] = &*light_client_updates.0 else {
-                anyhow::bail!(
-                    "no or many light client updates found for period {}: {}",
-                    current_period,
-                    light_client_updates.0.len()
-                );
-            };
+            let [update] = <[_; 1]>::try_from(light_client_updates.0)
+                .map_err(|x| anyhow::anyhow!("length should be 1 but got {}", x.len()))?;
 
             anyhow::ensure!(update.data.finalized_header.beacon.slot <= slot);
             anyhow::ensure!(slot - update.data.finalized_header.beacon.slot < spec.period());
@@ -121,16 +143,15 @@ impl<C: Clone + SYNC_COMMITTEE_SIZE + BYTES_PER_LOGS_BLOOM + MAX_EXTRA_DATA_BYTE
             ibc_contract_address: self.ibc_handler_address.0 .0.try_into()?,
         };
 
+        let account_update = self
+            .account_proof(bootstrap.header.beacon.slot, [])
+            .await?
+            .0;
+
         let consensus_state = ConsensusState {
             slot: bootstrap.header.beacon.slot,
             state_root: bootstrap.header.execution.state_root,
-            storage_root: provider
-                .get_proof(self.ibc_handler_address, vec![])
-                .block_id(bootstrap.header.execution.block_number.into())
-                .await?
-                .storage_hash
-                .0
-                .into(),
+            storage_root: account_update.storage_root,
             // Normalize to nanos in order to be compliant with cosmos
             timestamp: bootstrap.header.execution.timestamp * 1_000_000_000,
             current_sync_committee: bootstrap.current_sync_committee.aggregate_pubkey,
@@ -238,9 +259,12 @@ impl<C: Clone + SYNC_COMMITTEE_SIZE + BYTES_PER_LOGS_BLOOM + MAX_EXTRA_DATA_BYTE
                     },
                 };
 
-                let account_update = self
-                    .account_update(update.finalized_header.beacon.slot)
-                    .await?;
+                let account_update = AccountUpdate {
+                    account_proof: self
+                        .account_proof(update.finalized_header.beacon.slot, [])
+                        .await?
+                        .0,
+                };
 
                 let consensus_update = LightClientUpdateProto::from(update).try_into()?;
 
@@ -283,7 +307,9 @@ impl<C: Clone + SYNC_COMMITTEE_SIZE + BYTES_PER_LOGS_BLOOM + MAX_EXTRA_DATA_BYTE
 
             let consensus_update = LightClientUpdateProto::from(update).try_into()?;
 
-            let account_update = self.account_update(target_slot).await?;
+            let account_update = AccountUpdate {
+                account_proof: self.account_proof(target_slot, []).await?.0,
+            };
 
             headers.push(Header {
                 trusted_sync_committee,
